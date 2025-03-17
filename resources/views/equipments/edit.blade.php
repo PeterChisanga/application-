@@ -43,7 +43,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
-                            <select name="type" id="type" class="form-select @error('type') is-invalid @enderror" required>
+                            <select name="type" id="type" class="form-control @error('type') is-invalid @enderror" required>
                                 <option value="" {{ old('type', $equipment->type) == '' ? 'selected' : '' }} disabled>Select Equipment Type</option>
                                 <option value="HMV" {{ old('type', $equipment->type) == 'HMV' ? 'selected' : '' }}>HMV (Tippers, Low Bed, etc.)</option>
                                 <option value="LMV" {{ old('type', $equipment->type) == 'LMV' ? 'selected' : '' }}>LMV (Hilux, SUVs, etc.)</option>

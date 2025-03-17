@@ -3,7 +3,7 @@
 @section('title', 'Applications')
 
 @section('content')
-<div class="container mt-5">
+<div class="container">
     <h2 class="mb-4">Applications</h2>
 
     <!-- Filter Form -->
@@ -38,6 +38,8 @@
                     <option value="HR Assistant Officer" {{ request('position_applied_for') == 'HR Assistant Officer' ? 'selected' : '' }}>HR Assistant Officer</option>
                     <option value="Safety Officer" {{ request('position_applied_for') == 'Safety Officer' ? 'selected' : '' }}>Safety Officer</option>
                     <option value="Chemist" {{ request('position_applied_for') == 'Chemist' ? 'selected' : '' }}>Chemist</option>
+                    <option value="Chemist" {{ request('position_applied_for') == 'Chemist' ? 'selected' : '' }}>Chemist</option>
+                    <option value="Accounts Assistant" {{ request('position_applied_for') == 'Accounts Assistant' ? 'selected' : '' }}>Accounts Assistant</option>
                 </select>
             </div>
         </div>

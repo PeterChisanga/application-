@@ -3,7 +3,7 @@
 @section('title', 'Employee Details')
 
 @section('content')
-<div class="container mt-5">
+<div class="container ">
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -25,14 +25,10 @@
     </h2>
 
     <div class="d-flex flex-column flex-md-row gap-2 mb-4">
-        {{-- ------------later update payslip generation-------------------- --}}
-        {{-- <a href="{{ route('employees.generatePayslip', $employee->id) }}" class="btn btn-primary">
-            <i class="fas fa-print"></i> Print Payslip
-        </a> --}}
-        <a href="{{ route('employees.edit', $employee->id) }}" class="btn btn-warning btn-sm mr-2">
+        <a href="{{ route('employees.edit', $employee->id) }}" class="btn btn-warning btn-sm mr-2  btn-sm w-30 mt-2 mt-md-0 mb-2 mb-md-0">
             <i class="fas fa-edit"></i> Edit
         </a>
-        <a href="{{ route('employees.print_employee_information', $employee->id) }}" class="btn btn-success">
+        <a href="{{ route('employees.print_employee_information', $employee->id) }}" class="btn btn-success btn-sm w-30 mt-2 mt-md-0 mb-2 mb-md-0">
             <i class="fas fa-print"></i> Print Employee Infomation
         </a>
     </div>
@@ -188,7 +184,7 @@
                     <h5 class="mb-0">Payslip</h5>
                 </div>
 
-                <button type="button" class="btn mt-4" style="background-color:#09872f; color: #fff; width:15%; margin-left:6px;" data-bs-toggle="modal" data-bs-target="#payslipModal" data-employee-id="{{ $employee->id }}">
+                <button type="button" class="btn btn-success btn-sm mt-2 me-2" style="width: 30%;" data-bs-toggle="modal" data-bs-target="#payslipModal" data-employee-id="{{ $employee->id }}">
                     <i class="fas fa-print"></i> Print Payslip
                 </button>
 

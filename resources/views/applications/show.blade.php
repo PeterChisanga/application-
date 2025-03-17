@@ -3,7 +3,7 @@
 @section('title', 'Applicant Details')
 
 @section('content')
-<div class="container mt-5">
+<div class="container">
     <a href="{{ route('applications.index') }}" class="btn btn-secondary mb-4">Back to Applications</a>
     <a href="{{ route('applications.edit',$application->id)}}" class="btn btn-primary mb-4">Update Application Status</a>
 

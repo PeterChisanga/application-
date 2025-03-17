@@ -3310,3 +3310,71 @@ $(document).ready(function () {
         </div>
     </body>
 </html>
+
+<!-- --------------------------Equipment index table ----------------------------------------- -->
+
+<div class="table-responsive">
+        <table class="table table-bordered mt-4">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    {{-- <th>Asset Code</th> --}}
+                    <th>Registration Number</th>
+                    <th>Equipment Name</th>
+                    <th>Type</th>
+                    {{-- <th>Value (USD)</th> --}}
+                    <th>Mileage (Km) /Hours</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($equipments as $equipment)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    {{-- <td>{{ $equipment->asset_code ?? 'N/A' }}</td> --}}
+                    <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
+                    <td>{{ $equipment->equipment_name }}</td>
+                    <td>{{ $equipment->type }}</td>
+                    {{-- <td>{{ number_format($equipment->value, 2) }}</td> --}}
+                    <td>
+                        @if($equipment->trips->last())
+                            {{ number_format($equipment->trips->last()->end_kilometers ?? $equipment->trips->last()->start_kilometers, 0, '.', ',') }} Km
+                        @elseif ($equipment->machineryUsages->last())
+                            {{ number_format($equipment->machineryUsages->last()->closing_hours ?? $equipment->machineryUsages->last()->start_hours, 0, '.', ',') }} Hours
+                        @else
+                         -
+                        @endif
+                    </td>
+                    <td>
+                        @if ($equipment->status == 'Running')
+                            <div class="btn btn-sm" style="background-color: #28a745; color: white; border-radius: 4px; padding: 0.25rem 0.5rem;">{{ $equipment->status }}</div>
+                        @elseif ($equipment->status == 'Under Maintenance')
+                            <div class="btn btn-sm" style="background-color: #6c757d; color: white; border-radius: 4px; padding: 0.25rem 0.5rem;">{{ $equipment->status }}</div>
+                        @elseif ($equipment->status == 'Broken Down')
+                            <div class="btn btn-sm" style="background-color: #ffc107; color: white; border-radius: 4px; padding: 0.25rem 0.5rem;">{{ $equipment->status }}</div>
+                        @elseif ($equipment->status == 'Accident')
+                            <div class="btn btn-sm" style="background-color: #dc3545; color: white; border-radius: 4px; padding: 0.25rem 0.5rem;">{{ $equipment->status }}</div>
+                        @else
+                            <div class="btn btn-sm" style="background-color: #6c757d; color: white; border-radius: 4px; padding: 0.25rem 0.5rem;">{{ $equipment->status ?? 'N/A' }}</div>
+                        @endif
+                    </td>
+                    <td class="text-nowrap">
+                        <div class="d-flex flex-column flex-md-row gap-1">
+                            <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-info btn-sm mr-1">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning btn-sm mt-1">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="9" class="text-center">No Equipment found.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>

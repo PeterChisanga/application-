@@ -32,7 +32,7 @@
 
   @include('layouts.header')
 
-    <div class="content-wrapper pt-5">
+    <div class="content-wrapper mt-1">
         @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}

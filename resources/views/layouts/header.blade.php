@@ -11,7 +11,7 @@
     <ul class="navbar-nav mx-auto">
         <li class="nav-item">
             <span class="nav-link">
-                <h3 class="text-white">Swarna Metals Zambia Limited (SMZL)</h3>
+                <h3 class="text-white">Swarna Metals</h3>
             </span>
         </li>
     </ul>
@@ -29,10 +29,15 @@
 
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
-    <a href="" class="brand-link text-center">
-        <span class="brand-text font-weight-light">Swarna ERP</span>
-    </a>
+    <!-- Brand Logo with Retract Cross -->
+    <div class="brand-link d-flex align-items-center justify-content-between">
+        <p class="text-center flex-grow-1">
+            <span class="brand-text font-weight-light">Swarna ERP</span>
+        </p>
+        <a href="#" class="d-block d-lg-none text-white" data-widget="pushmenu" role="button" aria-label="Close Sidebar">
+            <i class="fas fa-times"></i>
+        </a>
+    </div>
 
     <!-- Sidebar -->
     <div class="sidebar">
@@ -53,7 +58,8 @@
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('equipments.index') }}" class="nav-link">
-                        <p><i class="fas fa-truck"></i> Equipment</p>
+                        <i class="fas fa-truck"></i>
+                        <p>Equipment</p>
                     </a>
                 </li>
                 <li class="nav-item">

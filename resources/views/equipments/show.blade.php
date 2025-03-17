@@ -3,6 +3,17 @@
 @section('title', 'Equipment Details')
 
 @section('content')
+<style>
+    .equipment-title {
+        font-size: 1.25rem; /* Small screens */
+        word-wrap: break-word;
+    }
+    @media (min-width: 768px) {
+        .equipment-title {
+            font-size: 1.75rem; /* Medium screens and up */
+        }
+    }
+</style>
 <div class="container">
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -22,22 +33,22 @@
 
     <div id="successMessage" class="alert alert-success" style="display: none;"></div>
     <!-- Equipment Header -->
-    <h2 class="mb-4">
+    <h2 class="mb-2 equipment-title">
         Equipment Details For:
         @if ($equipment->registration_number)
-             {{ $equipment->registration_number.'-'.$equipment->equipment_name }}
+            {{ $equipment->registration_number . '-' . $equipment->equipment_name }}
         @else
-            {{ $equipment->asset_code.'-'.$equipment->equipment_name ?? 'N/A' }}
+            {{ $equipment->asset_code . '-' . $equipment->equipment_name ?? 'N/A' }}
         @endif
     </h2>
 
     <!-- Action Buttons -->
-    <div class="d-flex flex-column flex-md-row gap-2 mb-4">
-        <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning mr-2"><i class="fas fa-edit"></i> Edit</a>
-        <button type="button" class="btn add-trip-btn mr-2" style="background-color:#510404; color: #fff;" data-equipment-id="{{ $equipment->id }}" data-equipment-type="{{ $equipment->type }}">
+    <div class="d-flex flex-column flex-md-row">
+        <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning m-1"><i class="fas fa-edit"></i> Edit</a>
+        <button type="button" class="btn add-trip-btn m-1" style="background-color:#510404; color: #fff;" data-equipment-id="{{ $equipment->id }}" data-equipment-type="{{ $equipment->type }}">
             <i class="fas fa-plus-circle"></i> Add Trip
         </button>
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reportModal">
+        <button type="button" class="btn btn-success m-1" data-bs-toggle="modal" data-bs-target="#reportModal">
             <i class="fas fa-file-alt"></i> Generate Equipment Report
         </button>
     </div>
@@ -310,7 +321,7 @@
                     <h5 class="mb-0">Spare Parts</h5>
                 </div>
 
-                <a href="{{ route('equipment_spares.create',$equipment->id)}}" class="btn mt-4" style="background-color:#510404; color: #fff; width:15%; margin-left:6px;"><i class="fas fa-plus-circle"></i> Register Spares</a>
+                <a href="{{ route('equipment_spares.create',$equipment->id)}}" class="btn btn-sm w-50 w-md-auto mt-1 me-md-2" style="background-color:#510404; color: #fff; margin-left:6px;"><i class="fas fa-plus-circle"></i> Register Spares</a>
 
                 <div class="card-body">
                     @if ($equipment->spares->isEmpty())
@@ -348,7 +359,7 @@
                     <h5 class="mb-0">Insurances</h5>
                 </div>
 
-                <a href="{{ route('equipment_insurances.create',$equipment->id)}}" class="btn mt-4" style="background-color:#510404; color: #fff; width:15%; margin-left:6px;"><i class="fas fa-plus-circle"></i> Register Insurance</a>
+                <a href="{{ route('equipment_insurances.create',$equipment->id)}}" class="btn w-50 w-md-auto mt-1 me-md-2" style="background-color:#510404; color: #fff; margin-left:6px;"><i class="fas fa-plus-circle"></i> Register Insurance</a>
 
                 <div class="card-body">
                     @if ($equipment->equipmentInsurances->isEmpty())
@@ -390,7 +401,7 @@
                     <h5 class="mb-0">Taxes</h5>
                 </div>
 
-                <a href="{{ route('equipment_taxes.create',$equipment->id)}}" class="btn mt-4" style="background-color:#510404; color: #fff; width:15%; margin-left:6px;"><i class="fas fa-plus-circle"></i> Register Tax</a>
+                <a href="{{ route('equipment_taxes.create',$equipment->id)}}" class="btn w-50 w-md-auto mt-1 me-md-2" style="background-color:#510404; color: #fff; margin-left:6px;"><i class="fas fa-plus-circle"></i> Register Tax</a>
 
                 <div class="card-body">
                     @if ($equipment->equipmentTaxes->isEmpty())
@@ -431,11 +442,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-warning mb-3">
-                        <small>
-                            <strong>Note:</strong> If the Driver/Operator is not listed in the dropdown below, please ensure they are registered as an employee with the designation "DRIVER" or "OPERATOR" in the employee management section.
-                        </small>
-                    </div>
                     <form id="addTripForm" action="{{ route('trips.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="equipment_id" id="addEquipmentId" value="{{ $equipment->id }}">
@@ -591,11 +597,6 @@
                     <button type="button" class="btn-close" style="color: #fff;" id="btn_close_machinery" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-warning mb-3">
-                        <small>
-                            <strong>Note:</strong> If the Driver/Operator is not listed in the dropdown below, please ensure they are registered as an employee with the designation "DRIVER" or "OPERATOR" in the employee management section.
-                        </small>
-                    </div>
                     <form action="{{ route('machinery_usages.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="equipment_id" id="selectedMachineryId">
