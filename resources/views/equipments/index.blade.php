@@ -279,19 +279,13 @@
                     <button type="button" class="btn-close" style="color: #fff;" id="btn_close_machinery" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-warning mb-3">
-                        <small>
-                            <strong>Note:</strong> If the Driver/Operator is not listed in the dropdown below, please ensure they are registered as an employee with the designation "DRIVER" or "OPERATOR" in the employee management section.
-                        </small>
-                    </div>
                     <form action="{{ route('machinery_usages.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="equipment_id" id="selectedMachineryId">
-
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
                                 <label for="operator_id" class="form-label">Operator <span class="text-danger">*</span></label>
-                                <select name="operator_id" id="operator_id" class="form-select @error('operator_id') is-invalid @enderror" required>
+                                <select name="operator_id" id="operator_id" class="form-control @error('operator_id') is-invalid @enderror" required>
                                     <option value="">Select Operator</option>
                                     @foreach (\App\Models\Employee::whereIn('designation', [
                                         'DRIVER',

@@ -81,8 +81,8 @@ class EmployeeController extends Controller {
 
                 // References
                 'references' => 'nullable|array',
-                'references.*.name' => 'required_with:references|string|max:255',
-                'references.*.phone_number' => 'required_with:references|string|max:255',
+                'references.*.name' => 'nullable|string|max:255',
+                'references.*.phone_number' => 'nullable|string|max:255',
 
                 // Payment Details
                 'payment_method' => 'required|string|max:255',
@@ -265,6 +265,11 @@ class EmployeeController extends Controller {
                 ($validated['middle_name'] ? $validated['middle_name'] . ' ' : '') .
                 $validated['surname_name']
             );
+
+            // Calculate fixed allowances
+            $validated['housing_allowance'] = $validated['basic_salary'] * 0.3; // 30% of basic salary
+            $validated['transport_allowance'] = 200; // Fixed value
+            $validated['food_allowance'] = 180; // Fixed value
 
             $employee->update($validated);
 

@@ -469,7 +469,7 @@
         <!-- References Section -->
         <div class="card mb-4">
             <div class="card-header text-white" style="background-color:#510404">
-                <h5 class="mb-0">References</h5>
+                <h5 class="mb-0">References (Optional)</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -479,32 +479,22 @@
                             <div id="references-container">
                                 @if (old('references'))
                                     @foreach (old('references') as $index => $reference)
-                                        <div class="reference-group mb-3">
-                                            <input type="text" name="references[{{ $index }}][name]" class="form-control mb-2 @error("references.{$index}.name") is-invalid @enderror"
-                                                   placeholder="Reference Name" value="{{ $reference['name'] }}">
-                                            @error("references.{$index}.name")
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <input type="text" name="references[{{ $index }}][phone_number]" class="form-control @error("references.{$index}.phone_number") is-invalid @enderror"
-                                                   placeholder="Reference Phone Number" value="{{ $reference['phone_number'] }}">
-                                            @error("references.{$index}.phone_number")
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                        @if (!empty($reference['name']) || !empty($reference['phone_number']))
+                                            <div class="reference-group mb-3">
+                                                <input type="text" name="references[{{ $index }}][name]" class="form-control mb-2 @error("references.{$index}.name") is-invalid @enderror"
+                                                       placeholder="Reference Name" value="{{ $reference['name'] }}">
+                                                @error("references.{$index}.name")
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                                <input type="text" name="references[{{ $index }}][phone_number]" class="form-control @error("references.{$index}.phone_number") is-invalid @enderror"
+                                                       placeholder="Reference Phone Number" value="{{ $reference['phone_number'] }}">
+                                                @error("references.{$index}.phone_number")
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                                <button type="button" class="btn btn-danger btn-sm mt-2 remove-reference">Remove</button>
+                                            </div>
+                                        @endif
                                     @endforeach
-                                @else
-                                    <div class="reference-group mb-3">
-                                        <input type="text" name="references[0][name]" class="form-control mb-2 @error('references.0.name') is-invalid @enderror"
-                                               placeholder="Reference Name">
-                                        @error('references.0.name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                        <input type="text" name="references[0][phone_number]" class="form-control @error('references.0.phone_number') is-invalid @enderror"
-                                               placeholder="Reference Phone Number">
-                                        @error('references.0.phone_number')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
                                 @endif
                             </div>
                             <button type="button" id="add-reference" class="btn btn-secondary mt-2">Add Reference</button>
@@ -522,18 +512,45 @@
     </form>
 </div>
 
-<!-- JavaScript to Add More Reference Fields -->
+<!-- JavaScript to Add/Remove Reference Fields -->
 <script>
-    document.getElementById('add-reference').addEventListener('click', function () {
+    document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('references-container');
-        const index = container.children.length;
-        const div = document.createElement('div');
-        div.classList.add('reference-group', 'mb-3');
-        div.innerHTML = `
-            <input type="text" name="references[${index}][name]" class="form-control mb-2" placeholder="Reference Name">
-            <input type="text" name="references[${index}][phone_number]" class="form-control" placeholder="Reference Phone Number">
-        `;
-        container.appendChild(div);
+        let index = container.children.length;
+
+        // Add new reference field
+        document.getElementById('add-reference').addEventListener('click', function () {
+            const div = document.createElement('div');
+            div.classList.add('reference-group', 'mb-3');
+            div.innerHTML = `
+                <input type="text" name="references[${index}][name]" class="form-control mb-2" placeholder="Reference Name">
+                <input type="text" name="references[${index}][phone_number]" class="form-control" placeholder="Reference Phone Number">
+                <button type="button" class="btn btn-danger btn-sm mt-2 remove-reference">Remove</button>
+            `;
+            container.appendChild(div);
+            index++;
+            updateRemoveButtons();
+        });
+
+        // Remove reference field
+        container.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-reference')) {
+                e.target.closest('.reference-group').remove();
+                updateRemoveButtons();
+            }
+        });
+
+        // Enable/disable remove buttons
+        function updateRemoveButtons() {
+            const groups = container.getElementsByClassName('reference-group');
+            const removeButtons = container.getElementsByClassName('remove-reference');
+            for (let i = 0; i < removeButtons.length; i++) {
+                removeButtons[i].disabled = groups.length === 0; // No disable logic since we allow all to be removed
+            }
+        }
+
+        // Initial call to set button state
+        updateRemoveButtons();
     });
 </script>
 @endsection

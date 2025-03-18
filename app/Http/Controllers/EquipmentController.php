@@ -69,7 +69,7 @@ class EquipmentController extends Controller {
             $request->validate([
                 'asset_code' => 'nullable|string|max:255|unique:equipments,asset_code',
                 'registration_number' => 'nullable|string|max:255',
-                'chassis_number' => 'nullable|string|max:255|unique:equipments,chasis_number',
+                'chassis_number' => 'nullable|string|max:255|unique:equipments,chassis_number',
                 'engine_number' => 'nullable|string|max:255|unique:equipments,engine_number',
                 'type' => 'required|in:HMV,LMV,Machinery',
                 'ownership' => 'required|string|max:255',

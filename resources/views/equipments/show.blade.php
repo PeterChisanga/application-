@@ -599,7 +599,7 @@
                 <div class="modal-body">
                     <form action="{{ route('machinery_usages.store') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="equipment_id" id="selectedMachineryId">
+                        <input type="hidden" name="equipment_id" id="addEquipmentId" value="{{ $equipment->id }}">
 
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
