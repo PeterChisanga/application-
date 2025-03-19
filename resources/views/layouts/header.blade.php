@@ -45,41 +45,53 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <li class="nav-item">
-                    <a href="{{ route('dashboards.admin') }}" class="nav-link">
+                    <a href="{{ route('dashboards.admin') }}" class="nav-link {{ Route::currentRouteName() === 'dashboards.admin' ? 'active' : '' }}">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
+
                 <li class="nav-item">
-                    <a href="{{ route('employees.index') }}" class="nav-link">
+                    <a href="{{ route('employees.index') }}" class="nav-link {{ Route::currentRouteName() === 'employees.index' ? 'active' : '' }}">
                         <i class="nav-icon fas fa-users"></i>
                         <p>Employees</p>
                     </a>
                 </li>
+
+                @if(in_array(auth()->user()->role, ['hr', 'admin']))
+                    <li class="nav-item">
+                        <a href="{{ route('applications.index') }}" class="nav-link {{ Route::currentRouteName() === 'applications.index' ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-file-alt"></i>
+                            <p>Job Applications</p>
+                        </a>
+                    </li>
+                @endif
+
+                @if(auth()->user()->role === 'admin')
+                    <li class="nav-item">
+                        <a href="{{ route('equipments.index') }}" class="nav-link {{ Route::currentRouteName() === 'equipments.index' ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-truck"></i>
+                            <p>Equipment</p>
+                        </a>
+                    </li>
+                @endif
+
+                @if(auth()->user()->role === 'admin')
+                    <li class="nav-item">
+                        <a href="{{ route('not-implemented-yet') }}" class="nav-link {{ Route::currentRouteName() === 'not-implemented-yet' ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-warehouse"></i>
+                            <p>Warehouse/Inventory</p>
+                        </a>
+                    </li>
+                @endif
+
                 <li class="nav-item">
-                    <a href="{{ route('equipments.index') }}" class="nav-link">
-                        <i class="fas fa-truck"></i>
-                        <p>Equipment</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('applications.index') }}" class="nav-link">
-                        <i class="nav-icon fas fa-file-alt"></i>
-                        <p>Job Applications</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('not-implemented-yet') }}" class="nav-link">
-                        <i class="nav-icon fas fa-warehouse"></i>
-                        <p>Warehouse/Inventory</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('users.show') }}" class="nav-link">
+                    <a href="{{ route('users.show') }}" class="nav-link {{ Route::currentRouteName() === 'users.show' ? 'active' : '' }}">
                         <i class="nav-icon fas fa-cog"></i>
                         <p>Settings</p>
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a href="{{ route('users.logout') }}" class="nav-link text-danger">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
