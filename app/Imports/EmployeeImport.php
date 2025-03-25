@@ -9,13 +9,15 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
-class EmployeeImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure {
+class EmployeeImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, WithCalculatedFormulas {
     use SkipsFailures;
 
     public function model(array $row) {
+         Log::debug("Row Data: " . json_encode($row));
         // Convert Excel date format (M/D/YYYY) to Y-m-d
         $dateFields = [
             'date_of_birth',

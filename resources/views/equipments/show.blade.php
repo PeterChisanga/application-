@@ -129,77 +129,6 @@
             </div>
         </div>
 
-        <!-- Trips Tab -->
-        {{-- <div class="tab-pane fade" id="trips" role="tabpanel" aria-labelledby="trips-tab">
-            <div class="card mt-3">
-                <div class="card-header " style="background-color:#510404; color: #fff;">
-                    @if ($equipment->type == 'Machinery')
-                        <h5 class="mb-0">Machinery Usage (Hours)</h5>
-                    @else
-                        <h5 class="mb-0">Trips</h5>
-                    @endif
-                </div>
-                <div class="card-body">
-                    @if ($equipment->trips->isEmpty())
-                        <div class="alert alert-warning">No Trips/Hours available for this equipment.</div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Departure Date</th>
-                                        <th>Return Date</th>
-                                        <th>Start Km</th>
-                                        <th>Close Km</th>
-                                        <th>Distance Travelled</th>
-                                        <th>Location</th>
-                                        <th>Driver</th>
-                                        <th>Material Delivered</th>
-                                        <th>Qty (tonnes)</th>
-                                        <th>Fuel Records</th>
-                                        <th>Total Fuel Used</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($equipment->trips as $trip)
-                                        <tr>
-                                            <td>{{ $trip->departure_date->format('Y-m-d') }}</td>
-                                            <td>{{ $trip->return_date ? $trip->return_date->format('Y-m-d') : '-' }}</td>
-                                            <td>{{ number_format($trip->start_kilometers) }}</td>
-                                            <td>{{ $trip->end_kilometers ? number_format($trip->end_kilometers) : '-' }}</td>
-                                            <td>{{ $trip->end_kilometers && $trip->start_kilometers ? number_format($trip->end_kilometers - $trip->start_kilometers) : '-' }} km</td>
-                                            <td>{{ $trip->location }}</td>
-                                            <td>{{ $trip->driver->employee_full_name ?? '-' }}</td>
-                                            <td>{{ $trip->material_delivered ?? '-' }}</td>
-                                            <td>{{ $trip->quantity ? number_format($trip->quantity, 2) : '-' }}</td>
-                                            <td>
-                                                @if ($trip->fuels->isEmpty())
-                                                    <span class="text-muted">No fuel data</span>
-                                                @else
-                                                    <ul class="list-unstyled mb-0">
-                                                        @foreach ($trip->fuels as $fuel)
-                                                            <li>{{ number_format($fuel->litres_added, 2) }} Litres at {{ $fuel->refuel_location ?? '-' }}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                @endif
-                                            </td>
-                                            <td>{{ number_format($trip->fuels->sum('litres_added'), 2) }} Litres</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-warning updateTripBtn" data-bs-toggle="modal" data-bs-target="#updateTripModal" data-trip-id="{{ $trip->id }}">
-                                                    <i class="fas fa-edit"></i> Update
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div> --}}
-
         <!-- Trips/Machinery Usage Tab -->
         <div class="tab-pane fade" id="trips" role="tabpanel" aria-labelledby="trips-tab">
             <div class="card mt-3">
@@ -211,6 +140,7 @@
                         @if ($equipment->machineryUsages->isEmpty())
                             <div class="alert alert-warning">No machinery usage records available for this equipment.</div>
                         @else
+                            <!-- Machinery table remains unchanged -->
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <thead class="table-dark">
@@ -268,7 +198,15 @@
                                             <th>Location</th>
                                             <th>Driver</th>
                                             <th>Material Delivered</th>
-                                            <th>Qty (tonnes)</th>
+                                            <th>Supplier Name</th> <!-- New -->
+                                            <th>Gross Wt (tonnes)</th> <!-- New -->
+                                            <th>Tare Wt (tonnes)</th> <!-- New -->
+                                            <th>Net Wt (tonnes)</th> <!-- New -->
+                                            <th>Loading Cost</th> <!-- New -->
+                                            <th>Council Fee</th> <!-- New -->
+                                            <th>Weighbridge Fee</th> <!-- New -->
+                                            <th>Toll Gate Fee</th> <!-- New -->
+                                            <th>Other Expenses</th> <!-- New -->
                                             <th>Fuel Records</th>
                                             <th>Total Fuel Used</th>
                                             <th>Actions</th>
@@ -285,7 +223,15 @@
                                                 <td>{{ $trip->location }}</td>
                                                 <td>{{ $trip->driver->employee_full_name ?? '-' }}</td>
                                                 <td>{{ $trip->material_delivered ?? '-' }}</td>
-                                                <td>{{ $trip->quantity ? number_format($trip->quantity, 2) : '-' }}</td>
+                                                <td>{{ $trip->supplier_name ?? '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->gross_weight ? number_format($trip->gross_weight, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->tare_weight ? number_format($trip->tare_weight, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->net_weight ? number_format($trip->net_weight, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->loading ? number_format($trip->loading, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->council_fee ? number_format($trip->council_fee, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->weighbridge ? number_format($trip->weighbridge, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->toll_gate ? number_format($trip->toll_gate, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->other_expenses ? number_format($trip->other_expenses, 2) : '-' }}</td> <!-- New -->
                                                 <td>
                                                     @if ($trip->fuels->isEmpty())
                                                         <span class="text-muted">No fuel data</span>
@@ -522,23 +468,111 @@
 
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
-                                <label for="add_material_delivered" class="form-label">Material Delivered</label>
-                                <input type="text" name="material_delivered" id="add_material_delivered" class="form-control @error('material_delivered') is-invalid @enderror"
-                                       value="{{ old('material_delivered') }}" placeholder="example: copper ore, quarry, blocks...">
+                                <label for="material_delivered" class="form-label">Material Delivered</label>
+                                <input type="text" name="material_delivered" class="form-control @error('material_delivered') is-invalid @enderror"
+                                    value="{{ old('material_delivered') }}" placeholder="example: copper ore, quarry, blocks...">
                                 @error('material_delivered')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-12 col-md-6">
-                                <label for="add_quantity" class="form-label">Quantity (tonnes)</label>
-                                <input type="number" step="0.01" name="quantity" id="add_quantity" class="form-control @error('quantity') is-invalid @enderror"
-                                       value="{{ old('quantity') }}" placeholder="example: 60, 25 ...">
-                                @error('quantity')
+                                <label for="supplier_name" class="form-label">Supplier Name</label>
+                                <input type="text" name="supplier_name" id="supplier_name" class="form-control @error('supplier_name') is-invalid @enderror"
+                                    value="{{ old('supplier_name') }}" placeholder="e.g., ABC Mining Co.">
+                                @error('supplier_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="gross_weight" class="form-label">Gross Weight (tonnes)</label>
+                                <input type="number" name="gross_weight" id="gross_weight" class="form-control @error('gross_weight') is-invalid @enderror"
+                                    step="0.01" value="{{ old('gross_weight') }}" placeholder="e.g., 80.50">
+                                @error('gross_weight')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="tare_weight" class="form-label">Tare Weight (tonnes)</label>
+                                <input type="number" name="tare_weight" id="tare_weight" class="form-control @error('tare_weight') is-invalid @enderror"
+                                    step="0.01" value="{{ old('tare_weight') }}" placeholder="e.g., 20.25">
+                                @error('tare_weight')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="net_weight" class="form-label">Net Weight (tonnes)</label>
+                                <input type="number" name="net_weight" id="net_weight" class="form-control @error('net_weight') is-invalid @enderror"
+                                    step="0.01" value="{{ old('net_weight') }}" placeholder="e.g., 60.25">
+                                @error('net_weight')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+
+                            </div>
+                        </div>
+
+                        <!-- Trip Expense Fields -->
+                        <h4 class="mt-4">Trip Expenses</h4>
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="loading" class="form-label">Loading Cost</label>
+                                <input type="number" name="loading" id="loading" class="form-control @error('loading') is-invalid @enderror"
+                                    step="0.01" value="{{ old('loading') }}" placeholder="e.g., 150.50">
+                                @error('loading')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="council_fee" class="form-label">Council Fee</label>
+                                <input type="number" name="council_fee" id="council_fee" class="form-control @error('council_fee') is-invalid @enderror"
+                                    step="0.01" value="{{ old('council_fee') }}" placeholder="e.g., 75.00">
+                                @error('council_fee')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="weighbridge" class="form-label">Weighbridge Fee</label>
+                                <input type="number" name="weighbridge" id="weighbridge" class="form-control @error('weighbridge') is-invalid @enderror"
+                                    step="0.01" value="{{ old('weighbridge') }}" placeholder="e.g., 20.50">
+                                @error('weighbridge')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="toll_gate" class="form-label">Toll Gate Fee</label>
+                                <input type="number" name="toll_gate" id="toll_gate" class="form-control @error('toll_gate') is-invalid @enderror"
+                                    step="0.01" value="{{ old('toll_gate') }}" placeholder="e.g., 50.25">
+                                @error('toll_gate')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="other_expenses" class="form-label">Other Expenses</label>
+                                <input type="number" name="other_expenses" id="other_expenses" class="form-control @error('other_expenses') is-invalid @enderror"
+                                    step="0.01" value="{{ old('other_expenses') }}" placeholder="e.g., 100.00">
+                                @error('other_expenses')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+
+                            </div>
+                        </div>
+
+                        <!-- Trip Fuel Fields -->
                         <h4 class="mt-4">Fuel Information</h4>
                         <div id="add-fuel-entries">
                             <div class="fuel-entry row mb-3">
@@ -584,6 +618,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 @include('equipments.trip-modal')
+
             </div>
         </div>
     </div>
@@ -769,31 +804,17 @@
                         <input type="hidden" name="equipment_id" value="{{ $equipment->id }}">
 
                         <div class="mb-3">
-                            <label for="month" class="form-label">Select Month <span class="text-danger">*</span></label>
-                            <select class="form-control @error('month') is-invalid @enderror" id="month" name="month" required>
-                                <option value="">Select Month</option>
-                                @for ($m = 1; $m <= 12; $m++)
-                                    <option value="{{ $m }}" {{ old('month') == $m ? 'selected' : '' }}>
-                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                    </option>
-                                @endfor
-                            </select>
-                            @error('month')
+                            <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date" name="start_date" value="{{ old('start_date') }}" >
+                            @error('start_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
-                            <label for="year" class="form-label">Select Year <span class="text-danger">*</span></label>
-                            <select class="form-control @error('year') is-invalid @enderror" id="year" name="year" required>
-                                <option value="">Select Year</option>
-                                @for ($y = date('Y'); $y >= date('Y') - 10; $y--)
-                                    <option value="{{ $y }}" {{ old('year') == $y ? 'selected' : '' }}>
-                                        {{ $y }}
-                                    </option>
-                                @endfor
-                            </select>
-                            @error('year')
+                            <label for="end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('end_date') is-invalid @enderror" id="end_date" name="end_date" value="{{ old('end_date') }}" >
+                            @error('end_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -803,8 +824,7 @@
                             <select class="form-control @error('format') is-invalid @enderror" id="format" name="format" required>
                                 <option value="">Select Format</option>
                                 <option value="csv" {{ old('format') == 'csv' ? 'selected' : '' }}>CSV</option>
-                                {{-- later update pdf format --}}
-                                {{-- <option value="pdf" {{ old('format') == 'pdf' ? 'selected' : '' }}>PDF</option> --}}
+                                {{-- <option value="pdf" {{ old('format') == 'pdf' ? 'selected' : '' }}>PDF</option> <!-- later Update PDF option --> --}}
                             </select>
                             @error('format')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -826,7 +846,8 @@
 <!-- JavaScript for AJAX and dynamic fuel entries -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    var fuelEntryCount = 1; // Global scope
+    var tripFuelEntryCount = 1;
+    var machineryFuelEntryCount = 1;
 
     document.addEventListener("DOMContentLoaded", function() {
         var addTripButton = document.querySelector('.add-trip-btn');
@@ -838,6 +859,8 @@
         var startHoursField = document.getElementById('start_hours');
         var fuelEntriesContainer = document.getElementById('add-fuel-entries');
         var addFuelEntryButton = document.getElementById('add-fuel-entry');
+        var machineryFuelEntriesContainer = document.getElementById('machinery-fuel-entries');
+        var machineryAddFuelEntryButton = document.getElementById('add-machinery-fuel-entry');
 
         if (addTripButton && equipmentIdField && tripModalElement && startKilometersField) {
             addTripButton.addEventListener('click', function() {
@@ -846,25 +869,19 @@
                 equipmentIdField.value = equipmentId;
 
                 if (equipmentType === 'Machinery') {
-                    // machineryIdField.value = this.value;
-
-                    // Fetch the last Machinery Usage's closing_hours for the selected equipment
                     fetch(`/machinery-usages/last-usage/${equipmentId}`)
                         .then(response => response.json())
                         .then(data => {
                             startHoursField.value = data.closing_hours !== null ? data.closing_hours : (data.start_hours || 0);
                         })
                         .catch(error => {
-                            console.error('Error fetching last trip details:', error);
-                            startHoursField.value = 0; // Default to 0 on error
+                            console.error('Error fetching last usage details:', error);
+                            startHoursField.value = 0;
                         });
 
                     var modal = new bootstrap.Modal(machineryModalElement);
                     modal.show();
                 } else {
-                    // equip.value = this.value;
-
-                    // Fetch the last trip's end_kilometers for the selected equipment
                     fetch(`/trips/last-trip/${equipmentId}`)
                         .then(response => response.json())
                         .then(data => {
@@ -872,7 +889,7 @@
                         })
                         .catch(error => {
                             console.error('Error fetching last trip details:', error);
-                            startKilometersField.value = 0; // Default to 0 on error
+                            startKilometersField.value = 0;
                         });
 
                     var modal = new bootstrap.Modal(tripModalElement);
@@ -881,43 +898,65 @@
             });
         }
 
-        addFuelEntryButton.addEventListener('click', function() {
+        function createFuelEntry(container, context) {
+            var count = context === 'trip' ? tripFuelEntryCount++ : machineryFuelEntryCount++;
+            var idPrefix = context === 'trip' ? 'trip_' : 'machinery_';
+
             var newEntry = `
                 <div class="fuel-entry row mb-3">
                     <div class="col-12 col-md-5">
-                        <label for="add_litres_added_${fuelEntryCount}" class="form-label">Litres Added <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" name="fuels[${fuelEntryCount}][litres_added]" id="add_litres_added_${fuelEntryCount}" class="form-control" placeholder="example: 60" required>
+                        <label for="${idPrefix}litres_added_${count}" class="form-label">Litres Added <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="fuels[${count}][litres_added]" id="${idPrefix}litres_added_${count}" class="form-control" placeholder="example: 60" required>
                     </div>
                     <div class="col-12 col-md-5">
-                        <label for="add_refuel_location_${fuelEntryCount}" class="form-label">Refuel Location</label>
-                        <input type="text" name="fuels[${fuelEntryCount}][refuel_location]" id="add_refuel_location_${fuelEntryCount}" class="form-control" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
+                        <label for="${idPrefix}refuel_location_${count}" class="form-label">Refuel Location</label>
+                        <input type="text" name="fuels[${count}][refuel_location]" id="${idPrefix}refuel_location_${count}" class="form-control" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
                     </div>
                     <div class="col-12 col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger remove-fuel-entry"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `;
-            fuelEntriesContainer.insertAdjacentHTML('beforeend', newEntry);
-            fuelEntryCount++;
-            updateRemoveButtons();
+            container.insertAdjacentHTML('beforeend', newEntry);
+            updateRemoveButtons(container);
+        }
+
+        if (addFuelEntryButton) {
+            addFuelEntryButton.addEventListener('click', function() {
+                createFuelEntry(fuelEntriesContainer, 'trip');
+            });
+        }
+
+        if (machineryAddFuelEntryButton) {
+            machineryAddFuelEntryButton.addEventListener('click', function() {
+                createFuelEntry(machineryFuelEntriesContainer, 'machinery');
+            });
+        }
+
+        // Event delegation for removing fuel entries (handles both containers)
+        [fuelEntriesContainer, machineryFuelEntriesContainer].forEach(container => {
+            container.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-fuel-entry') || e.target.parentElement.classList.contains('remove-fuel-entry')) {
+                    e.target.closest('.fuel-entry').remove();
+                    updateRemoveButtons(container);
+                }
+            });
         });
 
-        fuelEntriesContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-fuel-entry') || e.target.parentElement.classList.contains('remove-fuel-entry')) {
-                e.target.closest('.fuel-entry').remove();
-                updateRemoveButtons();
-            }
-        });
-
-        function updateRemoveButtons() {
-            var entries = fuelEntriesContainer.getElementsByClassName('fuel-entry');
-            var removeButtons = fuelEntriesContainer.getElementsByClassName('remove-fuel-entry');
+        function updateRemoveButtons(container) {
+            var entries = container.getElementsByClassName('fuel-entry');
+            var removeButtons = container.getElementsByClassName('remove-fuel-entry');
             for (var i = 0; i < removeButtons.length; i++) {
-                removeButtons[i].disabled = (entries.length === 1);
+                removeButtons[i].disabled = (entries.length <= 1);
             }
         }
-    });
 
+        document.addEventListener('input', function() {
+            let gross = parseFloat(document.getElementById('gross_weight').value) || 0;
+            let tare = parseFloat(document.getElementById('tare_weight').value) || 0;
+            document.getElementById('net_weight').value = (gross - tare).toFixed(2);
+        });
+    });
 
     // ----------------- Update Trip JavaScript --------------------------------
     $(document).ready(function() {
@@ -932,17 +971,28 @@
                 type: "GET",
                 success: function(response) {
                     console.log('AJAX Success:', response);
-                    $('#driver_id').val(response.driver_id);
-                    $('#location').val(response.location);
-                    $('#departure_date').val(response.departure_date);
-                    $('#return_date').val(response.return_date);
-                    $('#start_kilometers').val(response.start_kilometers);
-                    $('#end_kilometers').val(response.end_kilometers);
-                    $('#material_delivered').val(response.material_delivered);
-                    $('#quantity').val(response.quantity);
-                    $('#updateEquipmentId').val(response.equipment_id);
+                    let $modal = $('#updateTripForm');
 
-                    $('#fuel-entries').empty();
+                    $modal.find('#driver_id').val(response.driver_id || '');
+                    $modal.find('#location').val(response.location || '');
+                    $modal.find('#departure_date').val(response.departure_date || '');
+                    $modal.find('#return_date').val(response.return_date || '');
+                    $modal.find('#start_kilometers').val(response.start_kilometers || '');
+                    $modal.find('#end_kilometers').val(response.end_kilometers || '');
+                    $modal.find('#material_delivered').val(response.material_delivered || '');
+                    $modal.find('#quantity').val(response.quantity || '');
+                    $modal.find('#updateEquipmentId').val(response.equipment_id || '');
+                    $modal.find('#supplier_name').val(response.supplier_name || '');
+                    $modal.find('#gross_weight').val(response.gross_weight || '');
+                    $modal.find('#net_weight').val(response.net_weight || '');
+                    $modal.find('#tare_weight').val(response.tare_weight || '');
+                    $modal.find('#loading').val(response.loading || '');
+                    $modal.find('#council_fee').val(response.council_fee || '');
+                    $modal.find('#weighbridge').val(response.weighbridge || '');
+                    $modal.find('#toll_gate').val(response.toll_gate || '');
+                    $modal.find('#other_expenses').val(response.other_expenses || '');
+
+                    $('#fuel-entries-edit-trip').empty();
                     fuelEntryCount = 0;
                     response.fuels.forEach(function(fuel) {
                         var newEntry = `
@@ -961,7 +1011,7 @@
                                 </div>
                             </div>
                         `;
-                        $('#fuel-entries').append(newEntry);
+                        $('#fuel-entries-edit-trip').append(newEntry);
                         fuelEntryCount++;
                     });
                     updateRemoveButtons();
@@ -974,7 +1024,7 @@
             });
         });
 
-        $('#add-fuel-entry').on('click', function() {
+        $('#add-fuel-entry-edit-trip').on('click', function() {
             var newEntry = `
                 <div class="fuel-entry row mb-3">
                     <div class="col-12 col-md-5">
@@ -990,19 +1040,19 @@
                     </div>
                 </div>
             `;
-            $('#fuel-entries').append(newEntry);
+            $('#fuel-entries-edit-trip').append(newEntry);
             fuelEntryCount++;
             updateRemoveButtons();
         });
 
-        $('#fuel-entries').on('click', '.remove-fuel-entry', function() {
+        $('#fuel-entries-edit-trip').on('click', '.remove-fuel-entry', function() {
             $(this).closest('.fuel-entry').remove();
             updateRemoveButtons();
         });
 
         function updateRemoveButtons() {
-            var entries = $('#fuel-entries .fuel-entry');
-            var removeButtons = $('#fuel-entries .remove-fuel-entry');
+            var entries = $('#fuel-entries-edit-trip .fuel-entry');
+            var removeButtons = $('#fuel-entries-edit-trip .remove-fuel-entry');
             removeButtons.prop('disabled', entries.length === 1);
         }
 

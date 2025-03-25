@@ -3312,7 +3312,6 @@ $(document).ready(function () {
 </html>
 
 <!-- --------------------------Equipment index table ----------------------------------------- -->
-
 <div class="table-responsive">
         <table class="table table-bordered mt-4">
             <thead class="table-dark">
@@ -3378,3 +3377,106 @@ $(document).ready(function () {
             </tbody>
         </table>
     </div>
+
+
+<!-- ----------------------------------Equipment Report PD------------------------------------
+ -->
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Equipment Report</title>
+</head>
+<body>
+    <h1>{{ $equipment->type }} Report for {{ $equipment->equipment_name }}</h1>
+    <h3>Period: {{ $startDate }} to {{ $endDate }}</h3>
+
+    @if ($dataType === 'machinery')
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Start Hours</th>
+                    <th>Closing Hours</th>
+                    <th>Hours Used</th>
+                    <th>Location</th>
+                    <th>Operator</th>
+                    <th>Fuel Logs</th>
+                    <th>Total Fuel Used</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($data as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $item->date->format('Y-m-d') }}</td>
+                        <td>{{ $item->start_hours ?? '-' }}</td>
+                        <td>{{ $item->closing_hours ?? '-' }}</td>
+                        <td>{{ $item->closing_hours && $item->start_hours ? number_format($item->closing_hours - $item->start_hours, 2) : '-' }}</td>
+                        <td>{{ $item->location }}</td>
+                        <td>{{ $item->operator->employee_full_name ?? '-' }}</td>
+                        <td>{{ $item->fuels->map(fn($f) => "{$f->litres_added}L at {$f->refuel_location}")->implode(' | ') ?: 'No fuel data' }}</td>
+                        <td>{{ number_format($item->fuels->sum('litres_added'), 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <!-- Existing trip table structure -->
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Departure Date</th>
+                    <th>Return Date</th>
+                    <th>Start Km</th>
+                    <th>Close Km</th>
+                    <th>Distance</th>
+                    <th>Location</th>
+                    <th>Driver</th>
+                    <th>Material</th>
+                    <th>Supplier</th>
+                    <th>Gross Wt</th>
+                    <th>Tare Wt</th>
+                    <th>Net Wt</th>
+                    <th>Loading</th>
+                    <th>Council</th>
+                    <th>Weighbridge</th>
+                    <th>Toll Gate</th>
+                    <th>Other Exp</th>
+                    <th>Fuel Logs</th>
+                    <th>Total Fuel</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($data as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $item->departure_date->format('Y-m-d') }}</td>
+                        <td>{{ $item->return_date ? $item->return_date->format('Y-m-d') : '-' }}</td>
+                        <td>{{ number_format($item->start_kilometers) }}</td>
+                        <td>{{ $item->end_kilometers ? number_format($item->end_kilometers) : '-' }}</td>
+                        <td>{{ $item->end_kilometers && $item->start_kilometers ? number_format($item->end_kilometers - $item->start_kilometers) : '-' }}</td>
+                        <td>{{ $item->location }}</td>
+                        <td>{{ $item->driver->employee_full_name ?? '-' }}</td>
+                        <td>{{ $item->material_delivered ?? '-' }}</td>
+                        <td>{{ $item->supplier_name ?? '-' }}</td>
+                        <td>{{ $item->gross_weight ? number_format($item->gross_weight, 2) : '-' }}</td>
+                        <td>{{ $item->tare_weight ? number_format($item->tare_weight, 2) : '-' }}</td>
+                        <td>{{ $item->net_weight ? number_format($item->net_weight, 2) : '-' }}</td>
+                        <td>{{ $item->loading ? number_format($item->loading, 2) : '-' }}</td>
+                        <td>{{ $item->council_fee ? number_format($item->council_fee, 2) : '-' }}</td>
+                        <td>{{ $item->weighbridge ? number_format($item->weighbridge, 2) : '-' }}</td>
+                        <td>{{ $item->toll_gate ? number_format($item->toll_gate, 2) : '-' }}</td>
+                        <td>{{ $item->other_expenses ? number_format($item->other_expenses, 2) : '-' }}</td>
+                        <td>{{ $item->fuels->map(fn($f) => "{$f->litres_added}L at {$f->refuel_location}")->implode(' | ') ?: 'No fuel data' }}</td>
+                        <td>{{ number_format($item->fuels->sum('litres_added'), 2) }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    <!-- Associated costs and summary sections can remain largely the same, adjusted for $dataType -->
+</body>
+</html>

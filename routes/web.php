@@ -79,6 +79,10 @@ Route::middleware(['auth'])->group(function () {
     Route::match(['get', 'post'], '/employees/{employeeId}/generate-payslip', [EmployeeController::class, 'generatePayslip'])->name('employees.generatePayslip');
     Route::get('/employees/{employee}/information', [EmployeeController::class, 'printEmployeeInformation'])->name('employees.print_employee_information');
 
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/attendance/report', [AttendanceController::class, 'report'])->name('attendance.report');
+
     Route::get('/payslips/upload', [PayslipController::class, 'showUploadForm'])->name('payslips.uploadForm');
     Route::post('/payslips/upload', [PayslipController::class, 'upload'])->name('payslips.upload');
     Route::get('/payslips/generate', [PayslipController::class, 'generate'])->name('payslips.generate');

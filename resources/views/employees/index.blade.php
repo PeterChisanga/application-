@@ -26,6 +26,9 @@
     <div class="d-flex flex-wrap gap-2 mb-3">
         <a href="{{ route('employees.create') }}" class="btn btn-success btn-sm w-30 w-md-auto" style="background-color:#510404; color: #fff;"><i class="fas fa-user-plus"></i> Add New Employee</a>
     </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="{{ route('payslips.uploadForm') }}" class="btn btn-success btn-sm w-30 w-md-auto" style="background-color:#406a3f; color: #fff;"><i class="fas fa-user-plus"></i> Add Employee With Excel Sheet</a>
+    </div>
 
     <form action="{{ route('employees.index') }}" method="GET" class="mb-3">
         <div class="row g-3">

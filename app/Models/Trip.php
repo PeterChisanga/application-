@@ -19,12 +19,29 @@ class Trip extends Model {
         'material_delivered',
         'location',
         'quantity',
+        'loading',
+        'council_fee',
+        'weighbridge',
+        'toll_gate',
+        'other_expenses',
+        'supplier_name',
+        'gross_weight',
+        'net_weight',
+        'tare_weight',
     ];
 
     protected $casts = [
         'departure_date' => 'date',
         'return_date' => 'date',
-        'quantity' => 'decimal:2', // Casting to decimal with 2 decimal places
+        'quantity' => 'decimal:2',
+        'loading' => 'decimal:2',
+        'council_fee' => 'decimal:2',
+        'weighbridge' => 'decimal:2',
+        'toll_gate' => 'decimal:2',
+        'other_expenses' => 'decimal:2',
+        'gross_weight' => 'decimal:2',
+        'net_weight' => 'decimal:2',
+        'tare_weight' => 'decimal:2',
     ];
 
     public function equipment() {

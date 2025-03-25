@@ -100,4 +100,9 @@ class Employee extends Model
     {
         return $this->hasMany(MachineryUsage::class, 'operator_id');
     }
+
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
 }

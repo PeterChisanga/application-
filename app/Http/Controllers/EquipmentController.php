@@ -244,6 +244,15 @@ class EquipmentController extends Controller {
                 'fuels' => 'required|array|min:1', // At least one fuel entry
                 'fuels.*.litres_added' => 'required|numeric|min:0',
                 'fuels.*.refuel_location' => 'nullable|string|max:255',
+                'loading' => 'nullable|numeric',
+                'council_fee' => 'nullable|numeric',
+                'weighbridge' => 'nullable|numeric',
+                'toll_gate' => 'nullable|numeric',
+                'other_expenses' => 'nullable|numeric',
+                'supplier_name' => 'nullable|string|max:255',
+                'gross_weight' => 'nullable|numeric',
+                'net_weight' => 'nullable|numeric',
+                'tare_weight' => 'nullable|numeric',
             ]);
 
             // Generate unique trip number in format YYYYMMDD-RRRR e.g., 20250226-7756
@@ -284,7 +293,6 @@ class EquipmentController extends Controller {
             $response = [
                 'equipment_id' => $trip->equipment_id,
                 'driver_id' => $trip->driver_id,
-                'trip_number' => $trip->trip_number, // Optional, not used in form but included for completeness
                 'departure_date' => $trip->departure_date->toDateString(), // Format as YYYY-MM-DD
                 'return_date' => $trip->return_date ? $trip->return_date->toDateString() : null,
                 'start_kilometers' => $trip->start_kilometers,
@@ -292,6 +300,16 @@ class EquipmentController extends Controller {
                 'location' => $trip->location,
                 'material_delivered' => $trip->material_delivered,
                 'quantity' => $trip->quantity,
+                'loading' => $trip->loading,
+                'council_fee' => $trip->council_fee,
+                'weighbridge' => $trip->weighbridge,
+                'toll_gate' => $trip->toll_gate,
+                'other_expenses' => $trip->other_expenses,
+                'supplier_name' => $trip->supplier_name,
+                'gross_weight' => $trip->gross_weight,
+                'net_weight' => $trip->net_weight,
+                'tare_weight' => $trip->tare_weight,
+
                 'fuels' => $trip->fuels->map(function ($fuel) {
                     return [
                         'id' => $fuel->id,
@@ -324,6 +342,15 @@ class EquipmentController extends Controller {
                 'fuels.*.id' => 'nullable|exists:fuels,id', // For existing fuel records
                 'fuels.*.litres_added' => 'required|numeric|min:0',
                 'fuels.*.refuel_location' => 'nullable|string|max:255',
+                'loading' => 'nullable|numeric',
+                'council_fee' => 'nullable|numeric',
+                'weighbridge' => 'nullable|numeric',
+                'toll_gate' => 'nullable|numeric',
+                'other_expenses' => 'nullable|numeric',
+                'supplier_name' => 'nullable|string|max:255',
+                'gross_weight' => 'nullable|numeric',
+                'net_weight' => 'nullable|numeric',
+                'tare_weight' => 'nullable|numeric',
             ]);
 
             // Use a transaction to update trip and fuels together
@@ -394,33 +421,42 @@ class EquipmentController extends Controller {
     public function generate(Request $request) {
         $request->validate([
             'equipment_id' => 'required|exists:equipments,id',
-            'month' => 'required|numeric|min:1|max:12',
-            'year' => 'required|numeric|min:2000|max:' . date('Y'),
+            'start_date' => 'required|date|before_or_equal:end_date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'format' => 'required|in:csv,pdf',
         ]);
 
         try {
-            $equipment = Equipment::with('trips.fuels')->findOrFail($request->equipment_id);
+            $equipment = Equipment::with(['trips.fuels', 'machineryUsages.fuels'])->findOrFail($request->equipment_id);
 
-            $month = $request->month;
-            $year = $request->year;
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
             $format = $request->format;
 
-            $data = $equipment->trips()
-                ->whereMonth('departure_date', $month)
-                ->whereYear('departure_date', $year)
-                ->orderBy('departure_date', 'asc')
-                ->with('fuels') // Ensure fuels relationship is loaded
-                ->get();
+            if ($equipment->type === 'Machinery') {
+                $data = $equipment->machineryUsages()
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->orderBy('date', 'asc')
+                    ->with('fuels')
+                    ->get();
+                $dataType = 'machinery';
+            } else {
+                $data = $equipment->trips()
+                    ->whereBetween('departure_date', [$startDate, $endDate])
+                    ->orderBy('departure_date', 'asc')
+                    ->with('fuels')
+                    ->get();
+                $dataType = 'trips';
+            }
 
             if ($data->isEmpty()) {
-                return back()->with('error', 'No trip information found for the selected month and year.');
+                return back()->with('error', 'No ' . ($dataType === 'machinery' ? 'machinery usage' : 'trip') . ' information found for the selected date range.');
             }
 
             if ($format === 'pdf') {
-                return $this->generatePDF($data, $equipment, $month, $year);
+                return $this->generatePDF($data, $equipment, $startDate, $endDate, $dataType);
             } elseif ($format === 'csv') {
-                return $this->generateCSV($data, $equipment, $month, $year);
+                return $this->generateCSV($data, $equipment, $startDate, $endDate, $dataType);
             }
 
             return back()->with('error', 'Invalid format selected.');
@@ -430,210 +466,148 @@ class EquipmentController extends Controller {
         }
     }
 
-    private function generatePDF($data, Equipment $equipment, $month, $year) {
-        $pdf = Pdf::loadView('reports.equipment_pdf', compact('data', 'equipment', 'month', 'year'));
-        return $pdf->download("equipment_report_{$equipment->registration_number}_{$month}_{$year}.pdf");
+    private function generatePDF($data, Equipment $equipment, $startDate, $endDate, $dataType = 'trips') {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.equipment_pdf', compact('data', 'equipment', 'startDate', 'endDate', 'dataType'));
+        return $pdf->download("equipment_report_{$equipment->registration_number}_{$startDate}_to_{$endDate}.pdf");
     }
 
-    // private function generateCSV($data, Equipment $equipment, $month, $year) {
-    //     try {
-    //         $spreadsheet = new Spreadsheet();
-    //         $sheet = $spreadsheet->getActiveSheet();
-
-    //         // Set the title
-    //         $title = "{$equipment->registration_number} - {$equipment->equipment_name} - {$equipment->type} - {$month}/{$year}";
-    //         $sheet->setCellValue('A1', $title);
-    //         $sheet->mergeCells('A1:K1');
-    //         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    //         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
-
-    //         // Add headers
-    //         $sheet->setCellValue('A2', '#')
-    //             ->setCellValue('B2', 'Departure Date')
-    //             ->setCellValue('C2', 'Return Date')
-    //             ->setCellValue('D2', 'Start Km')
-    //             ->setCellValue('E2', 'Close Km')
-    //             ->setCellValue('F2', 'Distance Travelled')
-    //             ->setCellValue('G2', 'Location')
-    //             ->setCellValue('H2', 'Material Delivered')
-    //             ->setCellValue('I2', 'Material Qty (tonnes)')
-    //             ->setCellValue('J2', 'Fuel Logs')
-    //             ->setCellValue('K2', 'Total Fuel Used (Litres)');
-
-    //         // Style headers
-    //         $headerStyle = [
-    //             'font' => ['bold' => true],
-    //             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-    //             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-    //             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D3D3D3']]
-    //         ];
-    //         $sheet->getStyle('A2:K2')->applyFromArray($headerStyle);
-
-    //         // Add data rows
-    //         $row = 3;
-    //         $totalFuelUsed = 0;
-    //         $totalDistanceTravelled = 0;
-    //         $totalMaterialDelivered = 0;
-
-    //         foreach ($data as $trip) {
-    //             $fuelLogs = $trip->fuels->map(function ($fuel) {
-    //                 return "{$fuel->litres_added}L at {$fuel->refuel_location}";
-    //             })->implode(' | ');
-
-    //             $departureDate = $trip->departure_date
-    //                 ? Carbon::parse($trip->departure_date)->format('Y/m/d')
-    //                 : '-';
-
-    //             $returnDate = $trip->return_date
-    //                 ? Carbon::parse($trip->return_date)->format('Y/m/d')
-    //                 : '-';
-
-    //             $distanceTravelled = ($trip->end_kilometers && $trip->start_kilometers) ? ($trip->end_kilometers - $trip->start_kilometers) : 0;
-    //             $materialDelivered = $trip->quantity ?? 0;
-
-    //             $sheet->setCellValue('A' . $row, $row - 2)
-    //                 ->setCellValue('B' . $row, $departureDate)
-    //                 ->setCellValue('C' . $row, $returnDate)
-    //                 ->setCellValue('D' . $row, $trip->start_kilometers)
-    //                 ->setCellValue('E' . $row, $trip->end_kilometers ?? 0)
-    //                 ->setCellValue('F' . $row, $distanceTravelled)
-    //                 ->setCellValue('G' . $row, $trip->location)
-    //                 ->setCellValue('H' . $row, $trip->material_delivered ?? '-')
-    //                 ->setCellValue('I' . $row, $materialDelivered)
-    //                 ->setCellValue('J' . $row, $fuelLogs ?: 'No fuel data')
-    //                 ->setCellValue('K' . $row, number_format($trip->fuels->sum('litres_added'), 2));
-
-    //             // Update totals
-    //             $totalFuelUsed += $trip->fuels->sum('litres_added');
-    //             $totalDistanceTravelled += $distanceTravelled;
-    //             $totalMaterialDelivered += $materialDelivered;
-
-    //             $row++;
-    //         }
-
-    //         // Summary section
-    //         $summaryRow = $row + 2;
-    //         $sheet->setCellValue('A' . $summaryRow, 'Summary')
-    //             ->setCellValue('F' . $summaryRow, 'Total Distance Travelled:')
-    //             ->setCellValue('G' . $summaryRow, number_format($totalDistanceTravelled, 2) . ' Km')
-    //             ->setCellValue('F' . ($summaryRow + 1), 'Total Fuel Used:')
-    //             ->setCellValue('G' . ($summaryRow + 1), number_format($totalFuelUsed, 2) . ' Litres')
-    //             ->setCellValue('F' . ($summaryRow + 2), 'Total Material Delivered:')
-    //             ->setCellValue('G' . ($summaryRow + 2), number_format($totalMaterialDelivered, 2) . ' Tonnes');
-
-    //         // Style summary section
-    //         $summaryStyle = [
-    //             'font' => ['bold' => true],
-    //             'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
-    //         ];
-    //         $sheet->getStyle('A' . $summaryRow . ':G' . ($summaryRow + 2))->applyFromArray($summaryStyle);
-
-    //         // Auto-size columns
-    //         foreach (range('A', 'K') as $column) {
-    //             $sheet->getColumnDimension($column)->setAutoSize(true);
-    //         }
-
-    //         // Save the file
-    //         $filename = "equipment_report_{$equipment->registration_number}_{$month}_{$year}.xlsx";
-    //         $filePath = storage_path("app/public/{$filename}");
-    //         $writer = new Xlsx($spreadsheet);
-    //         $writer->save($filePath);
-
-    //         return response()->download($filePath, $filename)->deleteFileAfterSend();
-    //     } catch (\Exception $e) {
-    //         \Log::error('CSV Generation Error: ' . $e->getMessage());
-    //         return redirect()->back()->with('error', 'Failed to generate CSV file: ' . $e->getMessage())->withInput();
-    //     }
-    // }
-
-    private function generateCSV($data, Equipment $equipment, $month, $year) {
+    private function generateCSV($data, Equipment $equipment, $startDate, $endDate, $dataType = 'trips') {
         try {
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
             // Set the title
-            $title = "{$equipment->registration_number} - {$equipment->equipment_name} - {$equipment->type} - {$month}/{$year}";
+            $title = "{$equipment->registration_number} - {$equipment->equipment_name} - {$equipment->type} - {$startDate} to {$endDate}";
             $sheet->setCellValue('A1', $title);
-            $sheet->mergeCells('A1:K1');
+            $sheet->mergeCells('A1:T1');
             $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
-            // Add headers for trips
-            $sheet->setCellValue('A2', '#')
-                ->setCellValue('B2', 'Departure Date')
-                ->setCellValue('C2', 'Return Date')
-                ->setCellValue('D2', 'Start Km')
-                ->setCellValue('E2', 'Close Km')
-                ->setCellValue('F2', 'Distance Travelled')
-                ->setCellValue('G2', 'Location')
-                ->setCellValue('H2', 'Material Delivered')
-                ->setCellValue('I2', 'Material Qty (tonnes)')
-                ->setCellValue('J2', 'Fuel Logs')
-                ->setCellValue('K2', 'Total Fuel Used (Litres)');
+            // Add headers for trips or machinery
+            if ($dataType === 'machinery') {
+                $sheet->setCellValue('A2', '#')
+                    ->setCellValue('B2', 'Date')
+                    ->setCellValue('C2', 'Start Hours')
+                    ->setCellValue('D2', 'Closing Hours')
+                    ->setCellValue('E2', 'Hours Used')
+                    ->setCellValue('F2', 'Location')
+                    ->setCellValue('G2', 'Operator')
+                    ->setCellValue('H2', 'Fuel Logs')
+                    ->setCellValue('I2', 'Total Fuel Used (Litres)');
+            } else {
+                $sheet->setCellValue('A2', '#')
+                    ->setCellValue('B2', 'Departure Date')
+                    ->setCellValue('C2', 'Return Date')
+                    ->setCellValue('D2', 'Start Km')
+                    ->setCellValue('E2', 'Close Km')
+                    ->setCellValue('F2', 'Distance Travelled')
+                    ->setCellValue('G2', 'Location')
+                    ->setCellValue('H2', 'Driver')
+                    ->setCellValue('I2', 'Material Delivered')
+                    ->setCellValue('J2', 'Supplier Name')
+                    ->setCellValue('K2', 'Gross Weight (tonnes)')
+                    ->setCellValue('L2', 'Tare Weight (tonnes)')
+                    ->setCellValue('M2', 'Net Weight (tonnes)')
+                    ->setCellValue('N2', 'Loading Cost (ZMK)')
+                    ->setCellValue('O2', 'Council Fee (ZMK)')
+                    ->setCellValue('P2', 'Weighbridge Fee (ZMK)')
+                    ->setCellValue('Q2', 'Toll Gate Fee (ZMK)')
+                    ->setCellValue('R2', 'Other Expenses (ZMK)')
+                    ->setCellValue('S2', 'Fuel Logs')
+                    ->setCellValue('T2', 'Total Fuel Used (Litres)');
+            }
 
-            // Style headers for trips
+            // Style headers
             $headerStyle = [
                 'font' => ['bold' => true],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D3D3D3']]
             ];
-            $sheet->getStyle('A2:K2')->applyFromArray($headerStyle);
+            $sheet->getStyle('A2:' . ($dataType === 'machinery' ? 'I2' : 'T2'))->applyFromArray($headerStyle);
 
-            // Add data rows for trips
+            // Add data rows
             $row = 3;
             $totalFuelUsed = 0;
-            $totalDistanceTravelled = 0;
-            $totalMaterialDelivered = 0;
+            $totalDistanceOrHours = 0;
+            $totalLoadingCost = 0;
+            $totalCouncilFee = 0;
+            $totalWeighbridgeFee = 0;
+            $totalTollGateFee = 0;
+            $totalOtherExpenses = 0;
 
-            foreach ($data as $trip) {
-                $fuelLogs = $trip->fuels->map(function ($fuel) {
+            foreach ($data as $item) {
+                $fuelLogs = $item->fuels->map(function ($fuel) {
                     return "{$fuel->litres_added}L at {$fuel->refuel_location}";
                 })->implode(' | ');
 
-                $departureDate = $trip->departure_date ? Carbon::parse($trip->departure_date)->format('Y/m/d') : '-';
-                $returnDate = $trip->return_date ? Carbon::parse($trip->return_date)->format('Y/m/d') : '-';
-                $distanceTravelled = ($trip->end_kilometers && $trip->start_kilometers) ? ($trip->end_kilometers - $trip->start_kilometers) : 0;
-                $materialDelivered = $trip->quantity ?? 0;
+                if ($dataType === 'machinery') {
+                    $date = $item->date ? Carbon::parse($item->date)->format('Y/m/d') : '-';
+                    $hoursUsed = ($item->closing_hours && $item->start_hours) ? ($item->closing_hours - $item->start_hours) : 0;
 
-                $sheet->setCellValue('A' . $row, $row - 2)
-                    ->setCellValue('B' . $row, $departureDate)
-                    ->setCellValue('C' . $row, $returnDate)
-                    ->setCellValue('D' . $row, $trip->start_kilometers)
-                    ->setCellValue('E' . $row, $trip->end_kilometers ?? 0)
-                    ->setCellValue('F' . $row, $distanceTravelled)
-                    ->setCellValue('G' . $row, $trip->location)
-                    ->setCellValue('H' . $row, $trip->material_delivered ?? '-')
-                    ->setCellValue('I' . $row, $materialDelivered)
-                    ->setCellValue('J' . $row, $fuelLogs ?: 'No fuel data')
-                    ->setCellValue('K' . $row, number_format($trip->fuels->sum('litres_added'), 2));
+                    $sheet->setCellValue('A' . $row, $row - 2)
+                        ->setCellValue('B' . $row, $date)
+                        ->setCellValue('C' . $row, $item->start_hours ?? '-')
+                        ->setCellValue('D' . $row, $item->closing_hours ?? '-')
+                        ->setCellValue('E' . $row, $hoursUsed)
+                        ->setCellValue('F' . $row, $item->location)
+                        ->setCellValue('G' . $row, $item->operator->employee_full_name ?? '-')
+                        ->setCellValue('H' . $row, $fuelLogs ?: 'No fuel data')
+                        ->setCellValue('I' . $row, number_format($item->fuels->sum('litres_added'), 2));
 
-                // Update totals
-                $totalFuelUsed += $trip->fuels->sum('litres_added');
-                $totalDistanceTravelled += $distanceTravelled;
-                $totalMaterialDelivered += $materialDelivered;
+                    $totalDistanceOrHours += $hoursUsed;
+                } else {
+                    $departureDate = $item->departure_date ? Carbon::parse($item->departure_date)->format('Y/m/d') : '-';
+                    $returnDate = $item->return_date ? Carbon::parse($item->return_date)->format('Y/m/d') : '-';
+                    $distanceTravelled = ($item->end_kilometers && $item->start_kilometers) ? ($item->end_kilometers - $item->start_kilometers) : 0;
 
+                    $sheet->setCellValue('A' . $row, $row - 2)
+                        ->setCellValue('B' . $row, $departureDate)
+                        ->setCellValue('C' . $row, $returnDate)
+                        ->setCellValue('D' . $row, $item->start_kilometers)
+                        ->setCellValue('E' . $row, $item->end_kilometers ?? '-')
+                        ->setCellValue('F' . $row, $distanceTravelled)
+                        ->setCellValue('G' . $row, $item->location)
+                        ->setCellValue('H' . $row, $item->driver->employee_full_name ?? '-')
+                        ->setCellValue('I' . $row, $item->material_delivered ?? '-')
+                        ->setCellValue('J' . $row, $item->supplier_name ?? '-')
+                        ->setCellValue('K' . $row, $item->gross_weight ? number_format($item->gross_weight, 2) : '-')
+                        ->setCellValue('L' . $row, $item->tare_weight ? number_format($item->tare_weight, 2) : '-')
+                        ->setCellValue('M' . $row, $item->net_weight ? number_format($item->net_weight, 2) : '-')
+                        ->setCellValue('N' . $row, $item->loading ? number_format($item->loading, 2) : '-')
+                        ->setCellValue('O' . $row, $item->council_fee ? number_format($item->council_fee, 2) : '-')
+                        ->setCellValue('P' . $row, $item->weighbridge ? number_format($item->weighbridge, 2) : '-')
+                        ->setCellValue('Q' . $row, $item->toll_gate ? number_format($item->toll_gate, 2) : '-')
+                        ->setCellValue('R' . $row, $item->other_expenses ? number_format($item->other_expenses, 2) : '-')
+                        ->setCellValue('S' . $row, $fuelLogs ?: 'No fuel data')
+                        ->setCellValue('T' . $row, number_format($item->fuels->sum('litres_added'), 2));
+
+                    $totalDistanceOrHours += $distanceTravelled;
+                    $totalLoadingCost += $item->loading ?? 0;
+                    $totalCouncilFee += $item->council_fee ?? 0;
+                    $totalWeighbridgeFee += $item->weighbridge ?? 0;
+                    $totalTollGateFee += $item->toll_gate ?? 0;
+                    $totalOtherExpenses += $item->other_expenses ?? 0;
+                }
+
+                $totalFuelUsed += $item->fuels->sum('litres_added');
                 $row++;
             }
 
-            // Add a separator row
+            // Add associated costs section (common to both)
             $row++;
             $sheet->setCellValue('A' . $row, 'Associated Costs');
-            $sheet->mergeCells('A' . $row . ':K' . $row);
+            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'I' : 'T') . $row);
             $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
             $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-            // Add headers for associated costs
             $row++;
             $sheet->setCellValue('A' . $row, 'Type')
                 ->setCellValue('B' . $row, 'Details')
                 ->setCellValue('C' . $row, 'Amount (ZMK)')
                 ->setCellValue('D' . $row, 'Expiry Date');
-
-            // Style headers for associated costs
             $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray($headerStyle);
 
-            // Add data rows for insurances
             $row++;
             foreach ($equipment->equipmentInsurances as $insurance) {
                 $sheet->setCellValue('A' . $row, 'Insurance')
@@ -643,7 +617,6 @@ class EquipmentController extends Controller {
                 $row++;
             }
 
-            // Add data rows for taxes
             foreach ($equipment->equipmentTaxes as $tax) {
                 $sheet->setCellValue('A' . $row, 'Tax')
                     ->setCellValue('B' . $row, $tax->name)
@@ -652,57 +625,80 @@ class EquipmentController extends Controller {
                 $row++;
             }
 
-            // Add data rows for spares
             foreach ($equipment->spares as $spare) {
                 $sheet->setCellValue('A' . $row, 'Spares')
                     ->setCellValue('B' . $row, $spare->name)
-                    ->setCellValue('C' . $row, ($spare->price > 0) ? number_format($spare->price, 2) : '-' )
+                    ->setCellValue('C' . $row, ($spare->price > 0) ? number_format($spare->price, 2) : '-')
                     ->setCellValue('D' . $row, '-');
                 $row++;
             }
 
-            // Add a separator row before the summary
+            // Add summary section
             $row++;
             $sheet->setCellValue('A' . $row, 'Summary');
-            $sheet->mergeCells('A' . $row . ':K' . $row);
+            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'I' : 'T') . $row);
             $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
             $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-            // Fetch related costs
             $totalInsuranceCost = $equipment->equipmentInsurances()->sum('premium');
             $totalTaxCost = $equipment->equipmentTaxes()->sum('cost');
-            $totalSpareCost = $equipment->spares()->sum('price'); // Adjust if needed for actual cost
+            $totalSpareCost = $equipment->spares()->sum('price');
 
-            // Summary section
             $summaryRow = $row + 1;
-            $sheet->setCellValue('A' . $summaryRow, 'Summary')
-                ->setCellValue('F' . $summaryRow, 'Total Distance Travelled:')
-                ->setCellValue('G' . $summaryRow, number_format($totalDistanceTravelled, 2) . ' Km')
-                ->setCellValue('F' . ($summaryRow + 1), 'Total Fuel Used:')
-                ->setCellValue('G' . ($summaryRow + 1), number_format($totalFuelUsed, 2) . ' Litres')
-                ->setCellValue('F' . ($summaryRow + 2), 'Total Material Delivered:')
-                ->setCellValue('G' . ($summaryRow + 2), number_format($totalMaterialDelivered, 2) . ' Tonnes')
-                ->setCellValue('F' . ($summaryRow + 3), 'Total Insurance Cost:')
-                ->setCellValue('G' . ($summaryRow + 3), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2). ' ZMK' : '- ZMK')
-                ->setCellValue('F' . ($summaryRow + 4), 'Total Tax Cost:')
-                ->setCellValue('G' . ($summaryRow + 4), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMK' : '- ZMK')
-                ->setCellValue('F' . ($summaryRow + 5), 'Total Spare Cost:')
-                ->setCellValue('G' . ($summaryRow + 5), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMK' : '- ZMK');
+            $sheet->setCellValue('A' . $summaryRow, 'Summary');
+            if ($dataType === 'machinery') {
+                $sheet->setCellValue('F' . $summaryRow, 'Total Hours Used:')
+                    ->setCellValue('G' . $summaryRow, number_format($totalDistanceOrHours, 2) . ' Hours')
+                    ->setCellValue('F' . ($summaryRow + 1), 'Total Fuel Used:')
+                    ->setCellValue('G' . ($summaryRow + 1), number_format($totalFuelUsed, 2) . ' Litres')
+                    ->setCellValue('F' . ($summaryRow + 2), 'Total Insurance Cost:')
+                    ->setCellValue('G' . ($summaryRow + 2), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2) . ' ZMK' : '- ZMK')
+                    ->setCellValue('F' . ($summaryRow + 3), 'Total Tax Cost:')
+                    ->setCellValue('G' . ($summaryRow + 3), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMK' : '- ZMK')
+                    ->setCellValue('F' . ($summaryRow + 4), 'Total Spare Cost:')
+                    ->setCellValue('G' . ($summaryRow + 4), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMK' : '- ZMK');
 
-            // Style summary section
+                $summaryStyleRange = 'A' . $summaryRow . ':G' . ($summaryRow + 4);
+            } else {
+                $sheet->setCellValue('F' . $summaryRow, 'Total Distance Travelled:')
+                    ->setCellValue('G' . $summaryRow, number_format($totalDistanceOrHours, 2) . ' Km')
+                    ->setCellValue('F' . ($summaryRow + 1), 'Total Fuel Used:')
+                    ->setCellValue('G' . ($summaryRow + 1), number_format($totalFuelUsed, 2) . ' Litres')
+                    ->setCellValue('F' . ($summaryRow + 2), 'Total Net Weight (Material Delivered):')
+                    ->setCellValue('G' . ($summaryRow + 2), number_format($data->sum('net_weight'), 2) . ' Tonnes')
+                    ->setCellValue('F' . ($summaryRow + 3), 'Total Loading Cost:')
+                    ->setCellValue('G' . ($summaryRow + 3), number_format($totalLoadingCost, 2) . ' ZMK')
+                    ->setCellValue('F' . ($summaryRow + 4), 'Total Council Fee:')
+                    ->setCellValue('G' . ($summaryRow + 4), number_format($totalCouncilFee, 2) . ' ZMK')
+                    ->setCellValue('F' . ($summaryRow + 5), 'Total Weighbridge Fee:')
+                    ->setCellValue('G' . ($summaryRow + 5), number_format($totalWeighbridgeFee, 2) . ' ZMK')
+                    ->setCellValue('F' . ($summaryRow + 6), 'Total Toll Gate Fee:')
+                    ->setCellValue('G' . ($summaryRow + 6), number_format($totalTollGateFee, 2) . ' ZMK')
+                    ->setCellValue('F' . ($summaryRow + 7), 'Total Other Expenses:')
+                    ->setCellValue('G' . ($summaryRow + 7), number_format($totalOtherExpenses, 2) . ' ZMK')
+                    ->setCellValue('F' . ($summaryRow + 8), 'Total Insurance Cost:')
+                    ->setCellValue('G' . ($summaryRow + 8), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2) . ' ZMK' : '- ZMK')
+                    ->setCellValue('F' . ($summaryRow + 9), 'Total Tax Cost:')
+                    ->setCellValue('G' . ($summaryRow + 9), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMK' : '- ZMK')
+                    ->setCellValue('F' . ($summaryRow + 10), 'Total Spare Cost:')
+                    ->setCellValue('G' . ($summaryRow + 10), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMK' : '- ZMK');
+
+                $summaryStyleRange = 'A' . $summaryRow . ':G' . ($summaryRow + 12);
+            }
+
             $summaryStyle = [
                 'font' => ['bold' => true],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
             ];
-            $sheet->getStyle('A' . $summaryRow . ':G' . ($summaryRow + 5))->applyFromArray($summaryStyle);
+            $sheet->getStyle($summaryStyleRange)->applyFromArray($summaryStyle);
 
             // Auto-size columns
-            foreach (range('A', 'K') as $column) {
+            foreach (range('A', $dataType === 'machinery' ? 'I' : 'T') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 
             // Save the file
-            $filename = "equipment_report_{$equipment->registration_number}_{$month}_{$year}.xlsx";
+            $filename = "equipment_report_{$equipment->registration_number}_{$startDate}_to_{$endDate}.xlsx";
             $filePath = storage_path("app/public/{$filename}");
             $writer = new Xlsx($spreadsheet);
             $writer->save($filePath);

@@ -191,7 +191,6 @@ class EmployeeController extends Controller {
     public function update(Request $request, Employee $employee) {
         try {
             $validated = $request->validate([
-                // Personal Details
                 'first_name' => 'required|string|max:255',
                 'middle_name' => 'nullable|string|max:255',
                 'surname_name' => 'required|string|max:255',
@@ -204,18 +203,15 @@ class EmployeeController extends Controller {
                 'nationality' => 'required|string|max:255',
                 'date_of_birth' => 'required|date|before:today',
 
-                // Employment Dates
                 'date_of_joining' => 'required|date',
                 'date_of_contract' => 'required|date',
                 'date_of_termination_of_contract' => 'required|date|after:date_of_contract',
 
-                // Identification Details
                 'employee_id' => "required|string|max:255|unique:employees,employee_id,{$employee->id}",
                 'nhima_identification_number' => 'nullable|string|max:255',
                 'tpin_number' => 'nullable|string|max:255',
                 'nrc_or_passport_number' => 'required|string|max:255',
 
-                // Job Details
                 'designation' => 'required|string|max:255',
                 'department' => 'required|string|max:255',
                 'section' => 'required|string|max:255',
