@@ -419,7 +419,7 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="start_hours" class="form-label">Start Hours <span class="text-danger">*</span></label>
-                                <input type="number"  name="start_hours" id="start_hours" class="form-control @error('start_hours') is-invalid @enderror"
+                                <input type="number" step="0.01" name="start_hours" id="start_hours" class="form-control @error('start_hours') is-invalid @enderror"
                                     value="{{ old('start_hours') }}" placeholder="example: 85670" required>
                                 @error('start_hours')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -430,7 +430,7 @@
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
                                 <label for="closing_hours" class="form-label">Closing Hours <span class="text-danger">*</span></label>
-                                <input type="number" name="closing_hours" class="form-control @error('closing_hours') is-invalid @enderror"
+                                <input type="number" step="0.01" name="closing_hours" class="form-control @error('closing_hours') is-invalid @enderror"
                                     value="{{ old('closing_hours') }}" placeholder="example: 85690" required>
                                 @error('closing_hours')
                                     <div class="invalid-feedback">{{ $message }}</div>

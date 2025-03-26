@@ -237,7 +237,7 @@ class EquipmentController extends Controller {
                 'departure_date' => 'required|date',
                 'return_date' => 'nullable|date|after_or_equal:departure_date',
                 'start_kilometers' => 'required|integer|min:0',
-                'end_kilometers' => 'nullable|integer|gte:start_kilometers',
+                'end_kilometers' => 'nullable|integer',// this should be added later on |gte:start_kilometers
                 'location' => 'required|string|max:255',
                 'material_delivered' => 'nullable|string|max:255',
                 'quantity' => 'nullable|numeric|min:0',
@@ -334,7 +334,7 @@ class EquipmentController extends Controller {
                 'departure_date' => 'required|date',
                 'return_date' => 'nullable|date|after_or_equal:departure_date',
                 'start_kilometers' => 'required|integer|min:0',
-                'end_kilometers' => 'nullable|integer|gte:start_kilometers',
+                'end_kilometers' => 'nullable|integer', // should be added later on |gte:start_kilometers
                 'location' => 'required|string|max:255',
                 'material_delivered' => 'nullable|string|max:255',
                 'quantity' => 'nullable|numeric|min:0',
@@ -547,8 +547,8 @@ class EquipmentController extends Controller {
 
                     $sheet->setCellValue('A' . $row, $row - 2)
                         ->setCellValue('B' . $row, $date)
-                        ->setCellValue('C' . $row, $item->start_hours ?? '-')
-                        ->setCellValue('D' . $row, $item->closing_hours ?? '-')
+                        ->setCellValue('C' . $row, ($item->start_hours === null || $item->start_hours == 0) ? '-' : $item->start_hours)
+                        ->setCellValue('D' . $row, ($item->closing_hours === null || $item->closing_hours == 0) ? '-' : $item->closing_hours)
                         ->setCellValue('E' . $row, $hoursUsed)
                         ->setCellValue('F' . $row, $item->location)
                         ->setCellValue('G' . $row, $item->operator->employee_full_name ?? '-')
@@ -564,8 +564,8 @@ class EquipmentController extends Controller {
                     $sheet->setCellValue('A' . $row, $row - 2)
                         ->setCellValue('B' . $row, $departureDate)
                         ->setCellValue('C' . $row, $returnDate)
-                        ->setCellValue('D' . $row, $item->start_kilometers)
-                        ->setCellValue('E' . $row, $item->end_kilometers ?? '-')
+                        ->setCellValue('D' . $row, ($item->start_kilometers === null || $item->start_kilometers == 0) ? '-' : $item->start_kilometers)
+                        ->setCellValue('E' . $row, ($item->end_kilometers === null || $item->end_kilometers == 0) ? '-' : $item->end_kilometers)
                         ->setCellValue('F' . $row, $distanceTravelled)
                         ->setCellValue('G' . $row, $item->location)
                         ->setCellValue('H' . $row, $item->driver->employee_full_name ?? '-')
@@ -698,7 +698,7 @@ class EquipmentController extends Controller {
             }
 
             // Save the file
-            $filename = "equipment_report_{$equipment->registration_number}_{$startDate}_to_{$endDate}.xlsx";
+            $filename = "equipment_report_{$equipment->registration_number}_{$equipment->name}_{$startDate}_to_{$endDate}.xlsx";
             $filePath = storage_path("app/public/{$filename}");
             $writer = new Xlsx($spreadsheet);
             $writer->save($filePath);
@@ -718,7 +718,7 @@ class EquipmentController extends Controller {
                 'operator_id' => 'required|exists:employees,id',
                 'date' => 'required|date',
                 'start_hours' => 'required|numeric|min:0',
-                'closing_hours' => 'nullable|numeric|gt:start_hours',
+                'closing_hours' => 'nullable|numeric',// this should be added later |gt:start_hours
                 'location' => 'required|string|max:255',
                 'fuels' => 'required|array|min:1',
                 'fuels.*.litres_added' => 'required|numeric|min:0',

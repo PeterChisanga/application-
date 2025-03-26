@@ -160,7 +160,7 @@
                                             <tr>
                                                 <td>{{ $usage->date->format('Y-m-d') }}</td>
                                                 <td>{{ $usage->operator->employee_full_name ?? '-' }}</td>
-                                                <td>{{ number_format($usage->start_hours, 2) }}</td>
+                                                <td>{{ $usage->start_hours ? number_format($usage->start_hours, 2) : '-' }}</td>
                                                 <td>{{ $usage->closing_hours ? number_format($usage->closing_hours, 2) : '-' }}</td>
                                                 <td>{{ $usage->closing_hours && $usage->start_hours ? number_format($usage->closing_hours - $usage->start_hours, 2) : '-' }}</td>
                                                 <td>{{ $usage->location }}</td>
@@ -198,15 +198,15 @@
                                             <th>Location</th>
                                             <th>Driver</th>
                                             <th>Material Delivered</th>
-                                            <th>Supplier Name</th> <!-- New -->
-                                            <th>Gross Wt (tonnes)</th> <!-- New -->
-                                            <th>Tare Wt (tonnes)</th> <!-- New -->
-                                            <th>Net Wt (tonnes)</th> <!-- New -->
-                                            <th>Loading Cost</th> <!-- New -->
-                                            <th>Council Fee</th> <!-- New -->
-                                            <th>Weighbridge Fee</th> <!-- New -->
-                                            <th>Toll Gate Fee</th> <!-- New -->
-                                            <th>Other Expenses</th> <!-- New -->
+                                            <th>Supplier Name</th>
+                                            <th>Gross Wt (tonnes)</th>
+                                            <th>Tare Wt (tonnes)</th>
+                                            <th>Net Wt (tonnes)</th>
+                                            <th>Loading Cost</th>
+                                            <th>Council Fee</th>
+                                            <th>Weighbridge Fee</th>
+                                            <th>Toll Gate Fee</th>
+                                            <th>Other Expenses</th>
                                             <th>Fuel Records</th>
                                             <th>Total Fuel Used</th>
                                             <th>Actions</th>
@@ -682,7 +682,7 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="start_hours" class="form-label">Start Hours <span class="text-danger">*</span></label>
-                                <input type="number"  name="start_hours" id="start_hours" class="form-control @error('start_hours') is-invalid @enderror"
+                                <input type="number" step="0.01" name="start_hours" id="start_hours" class="form-control @error('start_hours') is-invalid @enderror"
                                     value="{{ old('start_hours') }}" placeholder="example: 85670" required>
                                 @error('start_hours')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -693,7 +693,7 @@
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
                                 <label for="closing_hours" class="form-label">Closing Hours <span class="text-danger">*</span></label>
-                                <input type="number" name="closing_hours" class="form-control @error('closing_hours') is-invalid @enderror"
+                                <input type="number" step="0.01" name="closing_hours" class="form-control @error('closing_hours') is-invalid @enderror"
                                     value="{{ old('closing_hours') }}" placeholder="example: 85690" required>
                                 @error('closing_hours')
                                     <div class="invalid-feedback">{{ $message }}</div>
