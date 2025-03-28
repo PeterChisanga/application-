@@ -72,7 +72,8 @@
         </select>
     </div>
 
-    @if($equipments->isEmpty())
+    {{-- old code --}}
+    {{-- @if($equipments->isEmpty())
         <p class="text-center mt-4">No equipment available.</p>
     @else
         <div class="table-responsive mt-4">
@@ -96,10 +97,34 @@
                             <td>{{ $equipment->equipment_name }}</td>
                             <td>{{ $equipment->type }}</td>
                             <td>
-                                @if($equipment->trips->last())
-                                    {{ number_format($equipment->trips->last()->end_kilometers ?? $equipment->trips->last()->start_kilometers, 0, '.', ',') }} Km
-                                @elseif ($equipment->machineryUsages->last())
-                                    {{ number_format($equipment->machineryUsages->last()->closing_hours ?? $equipment->machineryUsages->last()->start_hours, 0, '.', ',') }} Hours
+                                @if($equipment->type === 'HMV' || $equipment->type === 'LMV')
+                                    @php
+                                        $lastKilometers = null;
+                                        foreach ($equipment->trips->sortByDesc('return_date') as $trip) {
+                                            if (!is_null($trip->end_kilometers) && $trip->end_kilometers != 0) {
+                                                $lastKilometers = $trip->end_kilometers;
+                                                break;
+                                            } elseif (!is_null($trip->start_kilometers) && $trip->start_kilometers != 0) {
+                                                $lastKilometers = $trip->start_kilometers;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    {{ $lastKilometers !== null ? number_format($lastKilometers, 2, '.', ',') . ' Km' : '-' }}
+                                @elseif($equipment->type === 'Machinery')
+                                    @php
+                                        $lastHours = null;
+                                        foreach ($equipment->machineryUsages->sortByDesc('date') as $usage) {
+                                            if (!is_null($usage->closing_hours) && $usage->closing_hours != 0) {
+                                                $lastHours = $usage->closing_hours;
+                                                break;
+                                            } elseif (!is_null($usage->start_hours) && $usage->start_hours != 0) {
+                                                $lastHours = $usage->start_hours;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    {{ $lastHours !== null ? number_format($lastHours, 2, '.', ',') . ' Hours' : '-' }}
                                 @else
                                     -
                                 @endif
@@ -125,6 +150,227 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    @endif --}}
+
+    {{-- Grok --}}
+    @if($equipments->isEmpty())
+        <p class="text-center mt-4">No equipment available.</p>
+    @else
+        <div class="mt-4">
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs" id="equipmentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="machinery-tab" data-bs-toggle="tab" data-bs-target="#machinery" type="button" role="tab" aria-controls="machinery" aria-selected="true">Machinery</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="hmv-tab" data-bs-toggle="tab" data-bs-target="#hmv" type="button" role="tab" aria-controls="hmv" aria-selected="false">HMV</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="lmv-tab" data-bs-toggle="tab" data-bs-target="#lmv" type="button" role="tab" aria-controls="lmv" aria-selected="false">LMV</button>
+                </li>
+            </ul>
+
+            <!-- Tabs Content -->
+            <div class="tab-content" id="equipmentTabsContent">
+                <!-- HMV Tab -->
+                <div class="tab-pane fade" id="hmv" role="tabpanel" aria-labelledby="hmv-tab">
+                    @php $hmvEquipments = $equipments->where('type', 'HMV') @endphp
+                    @if($hmvEquipments->isEmpty())
+                        <p class="text-center mt-3">No HMV equipment available.</p>
+                    @else
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered table-striped table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Registration Number</th>
+                                        <th>Equipment Name</th>
+                                        <th>Type</th>
+                                        <th>Mileage (Km)</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($hmvEquipments as $equipment)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
+                                            <td>{{ $equipment->equipment_name }}</td>
+                                            <td>{{ $equipment->type }}</td>
+                                            <td>
+                                                @php
+                                                    $lastKilometers = null;
+                                                    foreach ($equipment->trips->sortByDesc('return_date') as $trip) {
+                                                        if (!is_null($trip->end_kilometers) && $trip->end_kilometers != 0) {
+                                                            $lastKilometers = $trip->end_kilometers;
+                                                            break;
+                                                        } elseif (!is_null($trip->start_kilometers) && $trip->start_kilometers != 0) {
+                                                            $lastKilometers = $trip->start_kilometers;
+                                                            break;
+                                                        }
+                                                    }
+                                                @endphp
+                                                {{ $lastKilometers !== null ? number_format($lastKilometers, 2, '.', ',') . ' Km' : '-' }}
+                                            </td>
+                                            <td>
+                                                @if ($equipment->status == 'Running')
+                                                    <span class="badge bg-success">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Under Maintenance')
+                                                    <span class="badge bg-secondary">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Broken Down')
+                                                    <span class="badge bg-warning text-dark">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Accident')
+                                                    <span class="badge bg-danger">{{ $equipment->status }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $equipment->status ?? 'N/A' }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="d-flex gap-1 align-items-center">
+                                                <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> View</a>
+                                                <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning btn-xs ml-1"><i class="fas fa-edit"></i> Edit</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- LMV Tab -->
+                <div class="tab-pane fade" id="lmv" role="tabpanel" aria-labelledby="lmv-tab">
+                    @php $lmvEquipments = $equipments->where('type', 'LMV') @endphp
+                    @if($lmvEquipments->isEmpty())
+                        <p class="text-center mt-3">No LMV equipment available.</p>
+                    @else
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered table-striped table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Registration Number</th>
+                                        <th>Equipment Name</th>
+                                        <th>Type</th>
+                                        <th>Mileage (Km)</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($lmvEquipments as $equipment)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
+                                            <td>{{ $equipment->equipment_name }}</td>
+                                            <td>{{ $equipment->type }}</td>
+                                            <td>
+                                                @php
+                                                    $lastKilometers = null;
+                                                    foreach ($equipment->trips->sortByDesc('return_date') as $trip) {
+                                                        if (!is_null($trip->end_kilometers) && $trip->end_kilometers != 0) {
+                                                            $lastKilometers = $trip->end_kilometers;
+                                                            break;
+                                                        } elseif (!is_null($trip->start_kilometers) && $trip->start_kilometers != 0) {
+                                                            $lastKilometers = $trip->start_kilometers;
+                                                            break;
+                                                        }
+                                                    }
+                                                @endphp
+                                                {{ $lastKilometers !== null ? number_format($lastKilometers, 2, '.', ',') . ' Km' : '-' }}
+                                            </td>
+                                            <td>
+                                                @if ($equipment->status == 'Running')
+                                                    <span class="badge bg-success">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Under Maintenance')
+                                                    <span class="badge bg-secondary">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Broken Down')
+                                                    <span class="badge bg-warning text-dark">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Accident')
+                                                    <span class="badge bg-danger">{{ $equipment->status }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $equipment->status ?? 'N/A' }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="d-flex gap-1 align-items-center">
+                                                <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> View</a>
+                                                <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning btn-xs ml-1"><i class="fas fa-edit"></i> Edit</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Machinery Tab (Default Active) -->
+                <div class="tab-pane fade show active" id="machinery" role="tabpanel" aria-labelledby="machinery-tab">
+                    @php $machineryEquipments = $equipments->where('type', 'Machinery') @endphp
+                    @if($machineryEquipments->isEmpty())
+                        <p class="text-center mt-3">No Machinery equipment available.</p>
+                    @else
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered table-striped table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Registration Number</th>
+                                        <th>Equipment Name</th>
+                                        <th>Type</th>
+                                        <th>Hours</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($machineryEquipments as $equipment)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
+                                            <td>{{ $equipment->equipment_name }}</td>
+                                            <td>{{ $equipment->type }}</td>
+                                            <td>
+                                                @php
+                                                    $lastHours = null;
+                                                    foreach ($equipment->machineryUsages->sortByDesc('date') as $usage) {
+                                                        if (!is_null($usage->closing_hours) && $usage->closing_hours != 0) {
+                                                            $lastHours = $usage->closing_hours;
+                                                            break;
+                                                        } elseif (!is_null($usage->start_hours) && $usage->start_hours != 0) {
+                                                            $lastHours = $usage->start_hours;
+                                                            break;
+                                                        }
+                                                    }
+                                                @endphp
+                                                {{ $lastHours !== null ? number_format($lastHours, 2, '.', ',') . ' Hours' : '-' }}
+                                            </td>
+                                            <td>
+                                                @if ($equipment->status == 'Running')
+                                                    <span class="badge bg-success">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Under Maintenance')
+                                                    <span class="badge bg-secondary">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Broken Down')
+                                                    <span class="badge bg-warning text-dark">{{ $equipment->status }}</span>
+                                                @elseif ($equipment->status == 'Accident')
+                                                    <span class="badge bg-danger">{{ $equipment->status }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $equipment->status ?? 'N/A' }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="d-flex gap-1 align-items-center">
+                                                <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> View</a>
+                                                <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning btn-xs ml-1"><i class="fas fa-edit"></i> Edit</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     @endif
 

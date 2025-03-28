@@ -12,11 +12,13 @@ class Fuel extends Model {
         'trip_id',
         'machinery_usage_id',
         'litres_added',
+        'cost',
         'refuel_location',
     ];
 
     protected $casts = [
-        'litres_added' => 'decimal:2', 
+        'litres_added' => 'decimal:2',
+        'cost' => 'decimal:2',
     ];
 
     public function trip() {

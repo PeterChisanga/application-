@@ -3480,3 +3480,5 @@ $(document).ready(function () {
     <!-- Associated costs and summary sections can remain largely the same, adjusted for $dataType -->
 </body>
 </html>
+
+//you can watch a tutorial on youtube the basics and how to connect it to the database (MySQL)

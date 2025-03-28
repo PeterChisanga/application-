@@ -98,6 +98,7 @@
             <tr><td>11</td><td>Safety Officer</td></tr>
             <tr><td>12</td><td>Chemist</td></tr>
             <tr><td>13</td><td>Accounts Assistant</td></tr>
+            <tr><td>14</td><td>Stores In-charge</td></tr>
         </tbody>
     </table>
 
@@ -347,6 +348,23 @@
         <p>To submit your application, please <a href="{{ route('applications.create') }}">click here</a>.</p>
     </div>
 
+    <div>
+        <h3>14. Stores In-charge</h3>
+        <p><strong>Job Description:</strong></p>
+        <ul>
+            <li>Oversee and manage warehouse to ensure timely availability of resources while maintaining compliance with inventory control standards.</li>
+        </ul>
+        <p><strong>Qualifications Required:</strong></p>
+        <ul>
+            <li>Diploma or Bachelor's degree in Supply Chain Management or a related field.</li>
+            <li>3-5 years of experience in warehouse management.</li>
+            <li>Ability to manage heavy equipment and automotive spare parts.</li>
+            <li>Ability to work independently and meet tight deadlines.</li>
+            <li>Proficiency in Microsoft Office Suite (Excel, Word, PowerPoint).</li>
+            <li>Working knowledge in ERP systems is an added advantage.</li>
+        </ul>
+        <p>To submit your application, please <a href="{{ route('applications.create') }}">click here</a>.</p>
+    </div>
 
     <h3>General Requirements for All Positions</h3>
     <ul>

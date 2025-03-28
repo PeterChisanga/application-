@@ -217,7 +217,7 @@
                                             <tr>
                                                 <td>{{ $trip->departure_date->format('Y-m-d') }}</td>
                                                 <td>{{ $trip->return_date ? $trip->return_date->format('Y-m-d') : '-' }}</td>
-                                                <td>{{ number_format($trip->start_kilometers) }}</td>
+                                                <td>{{ $trip->start_kilometers ? number_format($trip->start_kilometers) : '-' }}</td>
                                                 <td>{{ $trip->end_kilometers ? number_format($trip->end_kilometers) : '-' }}</td>
                                                 <td>{{ $trip->end_kilometers && $trip->start_kilometers ? number_format($trip->end_kilometers - $trip->start_kilometers) : '-' }} km</td>
                                                 <td>{{ $trip->location }}</td>
