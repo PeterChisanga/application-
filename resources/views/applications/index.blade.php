@@ -40,7 +40,7 @@
                     <option value="Chemist" {{ request('position_applied_for') == 'Chemist' ? 'selected' : '' }}>Chemist</option>
                     <option value="Chemist" {{ request('position_applied_for') == 'Chemist' ? 'selected' : '' }}>Chemist</option>
                     <option value="Accounts Assistant" {{ request('position_applied_for') == 'Accounts Assistant' ? 'selected' : '' }}>Accounts Assistant</option>
-                    <option value="Stores In-charge" {{ request('position_applied_for') == 'Stores In-charge' ? 'selected' : '' }}>Stores In-charge</option>
+                    <option value="Stores Assistant" {{ request('position_applied_for') == 'Stores Assistant' ? 'selected' : '' }}>Stores Assistant</option>
                 </select>
             </div>
         </div>

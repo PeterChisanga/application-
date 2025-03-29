@@ -62,7 +62,7 @@
         <div class="row mb-3">
             <div class="col-12 col-md-6">
                 <label for="start_kilometers" class="form-label">Start Kilometers <span class="text-danger">*</span></label>
-                <input type="number" name="start_kilometers" id="start_kilometers"
+                <input type="number" step="0.01" name="start_kilometers" id="start_kilometers"
                     class="form-control @error('start_kilometers') is-invalid @enderror"
                     value="{{ old('start_kilometers') }}" placeholder="example: 54666" required>
                 @error('start_kilometers')
@@ -71,7 +71,7 @@
             </div>
             <div class="col-12 col-md-6">
                 <label for="end_kilometers" class="form-label">Closing Kilometers</label>
-                <input type="number" name="end_kilometers" id="end_kilometers" class="form-control @error('end_kilometers') is-invalid @enderror"
+                <input type="number" step="0.01" name="end_kilometers" id="end_kilometers" class="form-control @error('end_kilometers') is-invalid @enderror"
                     value="{{ old('end_kilometers') }}" placeholder="example: 54777">
                 @error('end_kilometers')
                     <div class="invalid-feedback">{{ $message }}</div>

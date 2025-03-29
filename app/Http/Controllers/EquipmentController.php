@@ -240,8 +240,8 @@ class EquipmentController extends Controller {
                 'driver_id' => 'required|exists:employees,id',
                 'departure_date' => 'required|date',
                 'return_date' => 'nullable|date|after_or_equal:departure_date',
-                'start_kilometers' => 'required|integer|min:0',
-                'end_kilometers' => 'nullable|integer',// this should be added later on |gte:start_kilometers
+                'start_kilometers' => 'required|numeric|min:0',
+                'end_kilometers' => 'nullable|numeric',// this should be added later on |gte:start_kilometers
                 'location' => 'required|string|max:255',
                 'material_delivered' => 'nullable|string|max:255',
                 'quantity' => 'nullable|numeric|min:0',
@@ -340,8 +340,8 @@ class EquipmentController extends Controller {
                 'driver_id' => 'required|exists:employees,id',
                 'departure_date' => 'required|date',
                 'return_date' => 'nullable|date|after_or_equal:departure_date',
-                'start_kilometers' => 'required|integer|min:0',
-                'end_kilometers' => 'nullable|integer', // should be added later on |gte:start_kilometers
+                'start_kilometers' => 'required|numeric|min:0',
+                'end_kilometers' => 'nullable|numeric', // should be added later on |gte:start_kilometers
                 'location' => 'required|string|max:255',
                 'material_delivered' => 'nullable|string|max:255',
                 'quantity' => 'nullable|numeric|min:0',

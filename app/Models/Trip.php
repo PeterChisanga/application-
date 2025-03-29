@@ -42,6 +42,8 @@ class Trip extends Model {
         'gross_weight' => 'decimal:2',
         'net_weight' => 'decimal:2',
         'tare_weight' => 'decimal:2',
+        'start_kilometers' => 'decimal:2',
+        'end_kilometers' => 'decimal:2',
     ];
 
     public function equipment() {

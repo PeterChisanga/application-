@@ -72,88 +72,6 @@
         </select>
     </div>
 
-    {{-- old code --}}
-    {{-- @if($equipments->isEmpty())
-        <p class="text-center mt-4">No equipment available.</p>
-    @else
-        <div class="table-responsive mt-4">
-            <table class="table table-bordered table-striped table-sm">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Registration Number</th>
-                        <th>Equipment Name</th>
-                        <th>Type</th>
-                        <th>Mileage (Km) / Hours</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($equipments as $equipment)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
-                            <td>{{ $equipment->equipment_name }}</td>
-                            <td>{{ $equipment->type }}</td>
-                            <td>
-                                @if($equipment->type === 'HMV' || $equipment->type === 'LMV')
-                                    @php
-                                        $lastKilometers = null;
-                                        foreach ($equipment->trips->sortByDesc('return_date') as $trip) {
-                                            if (!is_null($trip->end_kilometers) && $trip->end_kilometers != 0) {
-                                                $lastKilometers = $trip->end_kilometers;
-                                                break;
-                                            } elseif (!is_null($trip->start_kilometers) && $trip->start_kilometers != 0) {
-                                                $lastKilometers = $trip->start_kilometers;
-                                                break;
-                                            }
-                                        }
-                                    @endphp
-                                    {{ $lastKilometers !== null ? number_format($lastKilometers, 2, '.', ',') . ' Km' : '-' }}
-                                @elseif($equipment->type === 'Machinery')
-                                    @php
-                                        $lastHours = null;
-                                        foreach ($equipment->machineryUsages->sortByDesc('date') as $usage) {
-                                            if (!is_null($usage->closing_hours) && $usage->closing_hours != 0) {
-                                                $lastHours = $usage->closing_hours;
-                                                break;
-                                            } elseif (!is_null($usage->start_hours) && $usage->start_hours != 0) {
-                                                $lastHours = $usage->start_hours;
-                                                break;
-                                            }
-                                        }
-                                    @endphp
-                                    {{ $lastHours !== null ? number_format($lastHours, 2, '.', ',') . ' Hours' : '-' }}
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>
-                                @if ($equipment->status == 'Running')
-                                    <span class="badge bg-success">{{ $equipment->status }}</span>
-                                @elseif ($equipment->status == 'Under Maintenance')
-                                    <span class="badge bg-secondary">{{ $equipment->status }}</span>
-                                @elseif ($equipment->status == 'Broken Down')
-                                    <span class="badge bg-warning text-dark">{{ $equipment->status }}</span>
-                                @elseif ($equipment->status == 'Accident')
-                                    <span class="badge bg-danger">{{ $equipment->status }}</span>
-                                @else
-                                    <span class="badge bg-secondary">{{ $equipment->status ?? 'N/A' }}</span>
-                                @endif
-                            </td>
-                            <td class="d-flex gap-1 align-items-center">
-                                <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-info btn-xs"><i class="fas fa-eye"></i> View</a>
-                                <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-warning btn-xs ml-1"><i class="fas fa-edit"></i> Edit</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    @endif --}}
-
-    {{-- Grok --}}
     @if($equipments->isEmpty())
         <p class="text-center mt-4">No equipment available.</p>
     @else
@@ -186,7 +104,6 @@
                                         <th>#</th>
                                         <th>Registration Number</th>
                                         <th>Equipment Name</th>
-                                        <th>Type</th>
                                         <th>Mileage (Km)</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -198,7 +115,6 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
                                             <td>{{ $equipment->equipment_name }}</td>
-                                            <td>{{ $equipment->type }}</td>
                                             <td>
                                                 @php
                                                     $lastKilometers = null;
@@ -252,7 +168,6 @@
                                         <th>#</th>
                                         <th>Registration Number</th>
                                         <th>Equipment Name</th>
-                                        <th>Type</th>
                                         <th>Mileage (Km)</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -264,7 +179,6 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
                                             <td>{{ $equipment->equipment_name }}</td>
-                                            <td>{{ $equipment->type }}</td>
                                             <td>
                                                 @php
                                                     $lastKilometers = null;
@@ -318,7 +232,6 @@
                                         <th>#</th>
                                         <th>Registration Number</th>
                                         <th>Equipment Name</th>
-                                        <th>Type</th>
                                         <th>Hours</th>
                                         <th>Status</th>
                                         <th>Actions</th>
@@ -330,7 +243,6 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
                                             <td>{{ $equipment->equipment_name }}</td>
-                                            <td>{{ $equipment->type }}</td>
                                             <td>
                                                 @php
                                                     $lastHours = null;
@@ -446,7 +358,7 @@
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
                                 <label for="start_kilometers" class="form-label">Start Kilometers <span class="text-danger">*</span></label>
-                                <input type="number" name="start_kilometers" id="start_kilometers"
+                                <input type="number" step="0.01" name="start_kilometers" id="start_kilometers"
                                     class="form-control @error('start_kilometers') is-invalid @enderror"
                                     value="{{ old('start_kilometers') }}" placeholder="example: 54666" required>
                                 @error('start_kilometers')
@@ -455,7 +367,7 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="end_kilometers" class="form-label">Closing Kilometers</label>
-                                <input type="number" name="end_kilometers" class="form-control @error('end_kilometers') is-invalid @enderror"
+                                <input type="number" step="0.01" name="end_kilometers" class="form-control @error('end_kilometers') is-invalid @enderror"
                                     value="{{ old('end_kilometers') }}" placeholder="example: 54777">
                                 @error('end_kilometers')
                                     <div class="invalid-feedback">{{ $message }}</div>

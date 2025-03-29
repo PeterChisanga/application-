@@ -98,7 +98,7 @@
             <tr><td>11</td><td>Safety Officer</td></tr>
             <tr><td>12</td><td>Chemist</td></tr>
             <tr><td>13</td><td>Accounts Assistant</td></tr>
-            <tr><td>14</td><td>Stores In-charge</td></tr>
+            <tr><td>14</td><td>Stores Assistant</td></tr>
         </tbody>
     </table>
 
@@ -349,7 +349,7 @@
     </div>
 
     <div>
-        <h3>14. Stores In-charge</h3>
+        <h3>14. Stores Assistant</h3>
         <p><strong>Job Description:</strong></p>
         <ul>
             <li>Oversee and manage warehouse to ensure timely availability of resources while maintaining compliance with inventory control standards.</li>
@@ -358,6 +358,7 @@
         <ul>
             <li>Diploma or Bachelor's degree in Supply Chain Management or a related field.</li>
             <li>3-5 years of experience in warehouse management.</li>
+            <li>Must be an active member of ZIPS (Zambia Institute of Purchasing and Supply).</li>
             <li>Ability to manage heavy equipment and automotive spare parts.</li>
             <li>Ability to work independently and meet tight deadlines.</li>
             <li>Proficiency in Microsoft Office Suite (Excel, Word, PowerPoint).</li>

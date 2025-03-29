@@ -217,21 +217,22 @@
                                             <tr>
                                                 <td>{{ $trip->departure_date->format('Y-m-d') }}</td>
                                                 <td>{{ $trip->return_date ? $trip->return_date->format('Y-m-d') : '-' }}</td>
-                                                <td>{{ $trip->start_kilometers ? number_format($trip->start_kilometers) : '-' }}</td>
-                                                <td>{{ $trip->end_kilometers ? number_format($trip->end_kilometers) : '-' }}</td>
-                                                <td>{{ $trip->end_kilometers && $trip->start_kilometers ? number_format($trip->end_kilometers - $trip->start_kilometers) : '-' }} km</td>
+                                                <td>{{ $trip->start_kilometers ? number_format($trip->start_kilometers,2) : '-' }}</td>
+                                                <td>{{ $trip->end_kilometers ? number_format($trip->end_kilometers,2) : '-' }}</td>
+                                                <td>{{ $trip->end_kilometers && $trip->start_kilometers ? number_format($trip->end_kilometers - $trip->start_kilometers,2) : '-' }} km</td>
                                                 <td>{{ $trip->location }}</td>
                                                 <td>{{ $trip->driver->employee_full_name ?? '-' }}</td>
                                                 <td>{{ $trip->material_delivered ?? '-' }}</td>
-                                                <td>{{ $trip->supplier_name ?? '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->gross_weight ? number_format($trip->gross_weight, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->tare_weight ? number_format($trip->tare_weight, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->net_weight ? number_format($trip->net_weight, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->loading ? number_format($trip->loading, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->council_fee ? number_format($trip->council_fee, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->weighbridge ? number_format($trip->weighbridge, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->toll_gate ? number_format($trip->toll_gate, 2) : '-' }}</td> <!-- New -->
-                                                <td>{{ $trip->other_expenses ? number_format($trip->other_expenses, 2) : '-' }}</td> <!-- New -->
+                                                <td>{{ $trip->supplier_name ?? '-' }}</td>
+                                                <td>{{ $trip->gross_weight ? number_format($trip->gross_weight, 2) : '-' }}</td>
+                                                <td>{{ $trip->tare_weight ? number_format($trip->tare_weight, 2) : '-' }}</td>
+                                                <td>{{ isset($trip->net_weight) && $trip->net_weight > 0 ? number_format($trip->net_weight, 2) : '-' }}</td>
+                                                <td>{{ $trip->net_weight > 0 ? number_format($trip->net_weight, 2) : '-' }}</td>
+                                                <td>{{ $trip->loading ? number_format($trip->loading, 2) : '-' }}</td>
+                                                <td>{{ $trip->council_fee ? number_format($trip->council_fee, 2) : '-' }}</td>
+                                                <td>{{ $trip->weighbridge ? number_format($trip->weighbridge, 2) : '-' }}</td>
+                                                <td>{{ $trip->toll_gate ? number_format($trip->toll_gate, 2) : '-' }}</td>
+                                                <td>{{ $trip->other_expenses ? number_format($trip->other_expenses, 2) : '-' }}</td>
                                                 <td>
                                                     @if ($trip->fuels->isEmpty())
                                                         <span class="text-muted">No fuel data</span>
@@ -449,7 +450,7 @@
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
                                 <label for="add_start_kilometers" class="form-label">Start Kilometers <span class="text-danger">*</span></label>
-                                <input type="number" name="start_kilometers" id="add_start_kilometers"
+                                <input type="number" step="0.01" name="start_kilometers" id="add_start_kilometers"
                                        class="form-control @error('start_kilometers') is-invalid @enderror"
                                        value="{{ old('start_kilometers') }}" placeholder="example: 54666" required>
                                 @error('start_kilometers')
@@ -458,7 +459,7 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="add_end_kilometers" class="form-label">Closing Kilometers</label>
-                                <input type="number" name="end_kilometers" id="add_end_kilometers" class="form-control @error('end_kilometers') is-invalid @enderror"
+                                <input type="number" step="0.01" name="end_kilometers" id="add_end_kilometers" class="form-control @error('end_kilometers') is-invalid @enderror"
                                        value="{{ old('end_kilometers') }}" placeholder="example: 54777">
                                 @error('end_kilometers')
                                     <div class="invalid-feedback">{{ $message }}</div>
