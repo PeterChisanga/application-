@@ -140,7 +140,6 @@
                         @if ($equipment->machineryUsages->isEmpty())
                             <div class="alert alert-warning">No machinery usage records available for this equipment.</div>
                         @else
-                            <!-- Machinery table remains unchanged -->
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <thead class="table-dark">
@@ -156,28 +155,53 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($equipment->machineryUsages as $usage)
+                                        @forelse ($equipment->machineryUsages as $usage)
                                             <tr>
                                                 <td>{{ $usage->date->format('Y-m-d') }}</td>
                                                 <td>{{ $usage->operator->employee_full_name ?? '-' }}</td>
-                                                <td>{{ $usage->start_hours ? number_format($usage->start_hours, 2) : '-' }}</td>
-                                                <td>{{ $usage->closing_hours ? number_format($usage->closing_hours, 2) : '-' }}</td>
-                                                <td>{{ $usage->closing_hours && $usage->start_hours ? number_format($usage->closing_hours - $usage->start_hours, 2) : '-' }}</td>
-                                                <td>{{ $usage->location }}</td>
+                                                <td>{{ $usage->start_hours !== null && $usage->start_hours > 0 ? number_format($usage->start_hours, 2) : '-' }}</td>
+                                                <td>{{ $usage->closing_hours !== null && $usage->closing_hours > 0 ? number_format($usage->closing_hours, 2) : '-' }}</td>
+                                                <td>
+                                                    @if ($usage->closing_hours !== null && $usage->start_hours !== null && $usage->closing_hours > 0 && $usage->start_hours >= 0)
+                                                        {{ number_format($usage->closing_hours - $usage->start_hours, 2) }} hrs
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>{{ $usage->location ?? '-' }}</td>
                                                 <td>
                                                     @if ($usage->fuels->isEmpty())
-                                                        <span class="text-muted">No fuel data</span>
+                                                        <span class="text-muted small">No fuel data available</span>
                                                     @else
                                                         <ul class="list-unstyled mb-0">
                                                             @foreach ($usage->fuels as $fuel)
-                                                                <li>{{ number_format($fuel->litres_added, 2) }} Litres at {{ $fuel->refuel_location ?? '-' }}</li>
+                                                                <li>
+                                                                    {{ number_format($fuel->litres_added, 2) }} Litres
+                                                                    @if ($fuel->refuel_location)
+                                                                        <span class="text-muted">at {{ $fuel->refuel_location }}</span>
+                                                                    @endif
+                                                                    @if ($fuel->cost !== null)
+                                                                        <span class="text-muted">({{ number_format($fuel->cost, 2) }} ZMK)</span>
+                                                                    @endif
+                                                                </li>
                                                             @endforeach
                                                         </ul>
                                                     @endif
                                                 </td>
-                                                <td>{{ number_format($usage->fuels->sum('litres_added'), 2) }} Litres</td>
+                                                <?php
+                                                    $totalFuelCost = $usage->fuels->sum(function ($fuel) {
+                                                        return $fuel->cost !== null ? $fuel->litres_added * $fuel->cost : 0;
+                                                    });
+                                                ?>
+                                                <td>{{ number_format($usage->fuels->sum('litres_added'), 2) }} Litres
+                                                <span class="text-muted">({{ $totalFuelCost > 0 ? number_format($totalFuelCost, 2) . ' ZMW' : '-' }})</span>
+                                                </td>
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted">No machinery usage recorded for this equipment.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -202,56 +226,90 @@
                                             <th>Gross Wt (tonnes)</th>
                                             <th>Tare Wt (tonnes)</th>
                                             <th>Net Wt (tonnes)</th>
-                                            <th>Loading Cost</th>
-                                            <th>Council Fee</th>
-                                            <th>Weighbridge Fee</th>
-                                            <th>Toll Gate Fee</th>
-                                            <th>Other Expenses</th>
+                                            <th>Loading Cost (ZMW)</th>
+                                            <th>Council Fee (ZMW)</th>
+                                            <th>Weighbridge Fee (ZMW)</th>
+                                            <th>Toll Gate Fee (ZMW)</th>
+                                            <th>Other Expenses (ZMW)</th>
                                             <th>Fuel Records</th>
                                             <th>Total Fuel Used</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($equipment->trips as $trip)
+                                        @forelse ($equipment->trips as $trip)
                                             <tr>
                                                 <td>{{ $trip->departure_date->format('Y-m-d') }}</td>
                                                 <td>{{ $trip->return_date ? $trip->return_date->format('Y-m-d') : '-' }}</td>
-                                                <td>{{ $trip->start_kilometers ? number_format($trip->start_kilometers,2) : '-' }}</td>
-                                                <td>{{ $trip->end_kilometers ? number_format($trip->end_kilometers,2) : '-' }}</td>
-                                                <td>{{ $trip->end_kilometers && $trip->start_kilometers ? number_format($trip->end_kilometers - $trip->start_kilometers,2) : '-' }} km</td>
-                                                <td>{{ $trip->location }}</td>
+                                                <td>{{ $trip->start_kilometers !== null && $trip->start_kilometers > 0 ? number_format($trip->start_kilometers, 2) : '-' }}</td>
+                                                <td>{{ $trip->end_kilometers !== null && $trip->end_kilometers > 0 ? number_format($trip->end_kilometers, 2) : '-' }}</td>
+                                                <td>
+                                                    @if ($trip->end_kilometers !== null && $trip->start_kilometers !== null && $trip->end_kilometers > 0 && $trip->start_kilometers > 0)
+                                                        {{ number_format($trip->end_kilometers - $trip->start_kilometers, 2) }} km
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>{{ $trip->location ?? '-' }}</td>
                                                 <td>{{ $trip->driver->employee_full_name ?? '-' }}</td>
                                                 <td>{{ $trip->material_delivered ?? '-' }}</td>
                                                 <td>{{ $trip->supplier_name ?? '-' }}</td>
-                                                <td>{{ $trip->gross_weight ? number_format($trip->gross_weight, 2) : '-' }}</td>
-                                                <td>{{ $trip->tare_weight ? number_format($trip->tare_weight, 2) : '-' }}</td>
-                                                <td>{{ isset($trip->net_weight) && $trip->net_weight > 0 ? number_format($trip->net_weight, 2) : '-' }}</td>
-                                                <td>{{ $trip->net_weight > 0 ? number_format($trip->net_weight, 2) : '-' }}</td>
-                                                <td>{{ $trip->loading ? number_format($trip->loading, 2) : '-' }}</td>
-                                                <td>{{ $trip->council_fee ? number_format($trip->council_fee, 2) : '-' }}</td>
-                                                <td>{{ $trip->weighbridge ? number_format($trip->weighbridge, 2) : '-' }}</td>
-                                                <td>{{ $trip->toll_gate ? number_format($trip->toll_gate, 2) : '-' }}</td>
-                                                <td>{{ $trip->other_expenses ? number_format($trip->other_expenses, 2) : '-' }}</td>
+                                                <td>{{ $trip->gross_weight !== null ? number_format($trip->gross_weight, 2) : '-' }}</td>
+                                                <td>{{ $trip->tare_weight !== null ? number_format($trip->tare_weight, 2) : '-' }}</td>
+                                                <td>{{ $trip->net_weight !== null && $trip->net_weight > 0 ? number_format($trip->net_weight, 2) : '-' }}</td>
+                                                <td>{{ $trip->loading !== null ? number_format($trip->loading, 2) : '-' }}</td>
+                                                <td>{{ $trip->council_fee !== null ? number_format($trip->council_fee, 2) : '-' }}</td>
+                                                <td>{{ $trip->weighbridge !== null ? number_format($trip->weighbridge, 2) : '-' }}</td>
+                                                <td>{{ $trip->toll_gate !== null ? number_format($trip->toll_gate, 2) : '-' }}</td>
+                                                <td>{{ $trip->other_expenses !== null ? number_format($trip->other_expenses, 2) : '-' }}</td>
                                                 <td>
                                                     @if ($trip->fuels->isEmpty())
-                                                        <span class="text-muted">No fuel data</span>
+                                                        <span class="text-muted small">No fuel data available</span>
                                                     @else
                                                         <ul class="list-unstyled mb-0">
                                                             @foreach ($trip->fuels as $fuel)
-                                                                <li>{{ number_format($fuel->litres_added, 2) }} Litres at {{ $fuel->refuel_location ?? '-' }}</li>
+                                                                <li>
+                                                                    {{ number_format($fuel->litres_added, 2) }} Litres
+                                                                    @if ($fuel->refuel_location)
+                                                                        <span class="text-muted">at {{ $fuel->refuel_location }}</span>
+                                                                    @endif
+                                                                    @if ($fuel->cost !== null && $fuel->cost !== 0)
+                                                                        <span class="text-muted">({{ number_format($fuel->cost, 2) }} ZMW/L)</span>
+                                                                    @else
+                                                                        <span class="text-muted">(-)</span>
+                                                                    @endif
+                                                                </li>
                                                             @endforeach
                                                         </ul>
                                                     @endif
                                                 </td>
-                                                <td>{{ number_format($trip->fuels->sum('litres_added'), 2) }} Litres</td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-warning updateTripBtn" data-bs-toggle="modal" data-bs-target="#updateTripModal" data-trip-id="{{ $trip->id }}">
+                                                    @if ($trip->fuels->isEmpty())
+                                                        <span class="text-muted">-</span>
+                                                    @else
+                                                        <?php
+                                                            $totalFuelCost = $trip->fuels->sum(function ($fuel) {
+                                                                return $fuel->cost !== null ? $fuel->litres_added * $fuel->cost : 0;
+                                                            });
+                                                        ?>
+                                                        {{ number_format($trip->fuels->sum('litres_added'), 2) }} Litres
+                                                        <span class="text-muted">({{ $totalFuelCost > 0 ? number_format($totalFuelCost, 2) . ' ZMW' : '-' }})</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-warning updateTripBtn"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#updateTripModal"
+                                                            data-trip-id="{{ $trip->id }}">
                                                         <i class="fas fa-edit"></i> Update
                                                     </button>
                                                 </td>
                                             </tr>
-                                        @endforeach
+                                        @empty
+                                            <tr>
+                                                <td colspan="20" class="text-center text-muted">No trips recorded for this equipment.</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>
@@ -577,18 +635,26 @@
                         <h4 class="mt-4">Fuel Information</h4>
                         <div id="add-fuel-entries">
                             <div class="fuel-entry row mb-3">
-                                <div class="col-12 col-md-5">
+                                <div class="col-12 col-md-4">
                                     <label for="add_litres_added_0" class="form-label">Litres Added <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" name="fuels[0][litres_added]" id="add_litres_added_0" class="form-control @error('fuels.0.litres_added') is-invalid @enderror"
-                                           value="{{ old('fuels.0.litres_added') }}" placeholder="example: 60" required>
+                                        value="{{ old('fuels.0.litres_added') }}" placeholder="example: 60" required>
                                     @error('fuels.0.litres_added')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-12 col-md-5">
+                                <div class="col-12 col-md-3">
+                                    <label for="add_cost_0" class="form-label">Cost per Litre (ZMW)</label>
+                                    <input type="number" step="0.01" name="fuels[0][cost]" id="add_cost_0" class="form-control @error('fuels.0.cost') is-invalid @enderror"
+                                        value="{{ old('fuels.0.cost') }}" placeholder="example: 30.23">
+                                    @error('fuels.0.cost')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 col-md-3">
                                     <label for="add_refuel_location_0" class="form-label">Refuel Location</label>
                                     <input type="text" name="fuels[0][refuel_location]" id="add_refuel_location_0" class="form-control @error('fuels.0.refuel_location') is-invalid @enderror"
-                                           value="{{ old('fuels.0.refuel_location') }}" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
+                                        value="{{ old('fuels.0.refuel_location') }}" placeholder="example: Site, Chimwemwe Meru Station">
                                     @error('fuels.0.refuel_location')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -618,8 +684,9 @@
                     <h5 class="modal-title" id="updateTripModalLabel">Edit Trip Information</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                @include('equipments.trip-modal')
-
+                @if ($equipment->type === 'HMV')
+                    @include('equipments.trip-modal')
+                @endif
             </div>
         </div>
     </div>
@@ -705,18 +772,26 @@
                         <h4 class="mt-4">Fuel Information</h4>
                         <div id="machinery-fuel-entries">
                             <div class="fuel-entry row mb-3">
-                                <div class="col-12 col-md-5">
-                                    <label for="litres_added[]" class="form-label">Litres Added <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" name="fuels[0][litres_added]" class="form-control @error('fuels.0.litres_added') is-invalid @enderror"
-                                        value="{{ old('fuels.0.litres_added') }}" placeholder="example: 230" required>
+                                <div class="col-12 col-md-4">
+                                    <label for="machinery_litres_added_0" class="form-label">Litres Added <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" name="fuels[0][litres_added]" id="machinery_litres_added_0" class="form-control @error('fuels.0.litres_added') is-invalid @enderror"
+                                        value="{{ old('fuels.0.litres_added') }}" placeholder="example: 60" required>
                                     @error('fuels.0.litres_added')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-12 col-md-5">
-                                    <label for="refuel_location[]" class="form-label">Refuel Location</label>
-                                    <input type="text" name="fuels[0][refuel_location]" class="form-control @error('fuels.0.refuel_location') is-invalid @enderror"
-                                        value="{{ old('fuels.0.refuel_location') }}" placeholder="example: Site">
+                                <div class="col-12 col-md-3">
+                                    <label for="machinery_cost_0" class="form-label">Cost per Litre (ZMW)</label>
+                                    <input type="number" step="0.01" name="fuels[0][cost]" id="machinery_cost_0" class="form-control @error('fuels.0.cost') is-invalid @enderror"
+                                        value="{{ old('fuels.0.cost') }}" placeholder="example: 30.23">
+                                    @error('fuels.0.cost')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <label for="machinery_refuel_location_0" class="form-label">Refuel Location</label>
+                                    <input type="text" name="fuels[0][refuel_location]" id="machinery_refuel_location_0" class="form-control @error('fuels.0.refuel_location') is-invalid @enderror"
+                                        value="{{ old('fuels.0.refuel_location') }}" placeholder="example: Site, Chimwemwe Meru Station">
                                     @error('fuels.0.refuel_location')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -824,7 +899,7 @@
                             <label for="format" class="form-label">Report Format <span class="text-danger">*</span></label>
                             <select class="form-control @error('format') is-invalid @enderror" id="format" name="format" required>
                                 <option value="">Select Format</option>
-                                <option value="csv" {{ old('format') == 'csv' ? 'selected' : '' }}>CSV</option>
+                                <option value="csv" {{ old('format') == 'csv' ? 'selected' : '' }}>Excel (CSV)</option>
                                 {{-- <option value="pdf" {{ old('format') == 'pdf' ? 'selected' : '' }}>PDF</option> <!-- later Update PDF option --> --}}
                             </select>
                             @error('format')
@@ -847,26 +922,26 @@
 <!-- JavaScript for AJAX and dynamic fuel entries -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    var tripFuelEntryCount = 1;
-    var machineryFuelEntryCount = 1;
-
     document.addEventListener("DOMContentLoaded", function() {
-        var addTripButton = document.querySelector('.add-trip-btn');
-        var equipmentIdField = document.getElementById('addEquipmentId');
-        var machineryIdField = document.getElementById('selectedMachineryId');
-        var tripModalElement = document.getElementById('addTripModal');
-        var machineryModalElement = document.getElementById('logMachineryUsageModal');
-        var startKilometersField = document.getElementById('add_start_kilometers');
-        var startHoursField = document.getElementById('start_hours');
-        var fuelEntriesContainer = document.getElementById('add-fuel-entries');
-        var addFuelEntryButton = document.getElementById('add-fuel-entry');
-        var machineryFuelEntriesContainer = document.getElementById('machinery-fuel-entries');
-        var machineryAddFuelEntryButton = document.getElementById('add-machinery-fuel-entry');
+        let tripFuelEntryCount = 1; // Start at 1 since fuels[0] exists
+        let machineryFuelEntryCount = 1;
 
-        if (addTripButton && equipmentIdField && tripModalElement && startKilometersField) {
+        const addTripButton = document.querySelector('.add-trip-btn');
+        const equipmentIdField = document.getElementById('addEquipmentId');
+        const machineryIdField = document.getElementById('selectedMachineryId');
+        const tripModalElement = document.getElementById('addTripModal');
+        const machineryModalElement = document.getElementById('logMachineryUsageModal');
+        const startKilometersField = document.getElementById('add_start_kilometers');
+        const startHoursField = document.getElementById('start_hours');
+        const fuelEntriesContainer = document.getElementById('add-fuel-entries');
+        const addFuelEntryButton = document.getElementById('add-fuel-entry');
+        const machineryFuelEntriesContainer = document.getElementById('machinery-fuel-entries');
+        const machineryAddFuelEntryButton = document.getElementById('add-machinery-fuel-entry');
+
+        if (addTripButton && equipmentIdField && tripModalElement && startKilometersField && machineryModalElement && startHoursField) {
             addTripButton.addEventListener('click', function() {
-                var equipmentId = this.getAttribute('data-equipment-id');
-                var equipmentType = this.getAttribute('data-equipment-type');
+                const equipmentId = this.getAttribute('data-equipment-id');
+                const equipmentType = this.getAttribute('data-equipment-type');
                 equipmentIdField.value = equipmentId;
 
                 if (equipmentType === 'Machinery') {
@@ -878,9 +953,10 @@
                         .catch(error => {
                             console.error('Error fetching last usage details:', error);
                             startHoursField.value = 0;
+                            alert('Failed to fetch last usage data. Defaulting to 0 hours.');
                         });
 
-                    var modal = new bootstrap.Modal(machineryModalElement);
+                    const modal = new bootstrap.Modal(machineryModalElement);
                     modal.show();
                 } else {
                     fetch(`/trips/last-trip/${equipmentId}`)
@@ -891,27 +967,33 @@
                         .catch(error => {
                             console.error('Error fetching last trip details:', error);
                             startKilometersField.value = 0;
+                            alert('Failed to fetch last trip data. Defaulting to 0 kilometers.');
                         });
 
-                    var modal = new bootstrap.Modal(tripModalElement);
+                    const modal = new bootstrap.Modal(tripModalElement);
                     modal.show();
                 }
             });
         }
 
         function createFuelEntry(container, context) {
-            var count = context === 'trip' ? tripFuelEntryCount++ : machineryFuelEntryCount++;
-            var idPrefix = context === 'trip' ? 'trip_' : 'machinery_';
+            if (!container) return; // Guard against null container
+            const count = context === 'trip' ? tripFuelEntryCount++ : machineryFuelEntryCount++;
+            const idPrefix = context === 'trip' ? 'add_' : 'machinery_';
 
-            var newEntry = `
+            const newEntry = `
                 <div class="fuel-entry row mb-3">
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-4">
                         <label for="${idPrefix}litres_added_${count}" class="form-label">Litres Added <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" name="fuels[${count}][litres_added]" id="${idPrefix}litres_added_${count}" class="form-control" placeholder="example: 60" required>
                     </div>
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-3">
+                        <label for="${idPrefix}cost_${count}" class="form-label">Cost per Litre (ZMW)</label>
+                        <input type="number" step="0.01" name="fuels[${count}][cost]" id="${idPrefix}cost_${count}" class="form-control" placeholder="example: 30.23">
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label for="${idPrefix}refuel_location_${count}" class="form-label">Refuel Location</label>
-                        <input type="text" name="fuels[${count}][refuel_location]" id="${idPrefix}refuel_location_${count}" class="form-control" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
+                        <input type="text" name="fuels[${count}][refuel_location]" id="${idPrefix}refuel_location_${count}" class="form-control" placeholder="example: Site, Chimwemwe Meru Station">
                     </div>
                     <div class="col-12 col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger remove-fuel-entry"><i class="fas fa-trash"></i></button>
@@ -922,45 +1004,54 @@
             updateRemoveButtons(container);
         }
 
-        if (addFuelEntryButton) {
-            addFuelEntryButton.addEventListener('click', function() {
-                createFuelEntry(fuelEntriesContainer, 'trip');
-            });
+        function updateRemoveButtons(container) {
+            if (!container) return;
+            const entries = container.getElementsByClassName('fuel-entry');
+            const removeButtons = container.getElementsByClassName('remove-fuel-entry');
+            for (let button of removeButtons) {
+                button.disabled = entries.length <= 1;
+            }
         }
 
-        if (machineryAddFuelEntryButton) {
-            machineryAddFuelEntryButton.addEventListener('click', function() {
-                createFuelEntry(machineryFuelEntriesContainer, 'machinery');
-            });
+        if (addFuelEntryButton && fuelEntriesContainer) {
+            addFuelEntryButton.addEventListener('click', () => createFuelEntry(fuelEntriesContainer, 'trip'));
         }
 
-        // Event delegation for removing fuel entries (handles both containers)
+        if (machineryAddFuelEntryButton && machineryFuelEntriesContainer) {
+            machineryAddFuelEntryButton.addEventListener('click', () => createFuelEntry(machineryFuelEntriesContainer, 'machinery'));
+        }
+
         [fuelEntriesContainer, machineryFuelEntriesContainer].forEach(container => {
+            if (!container) return; // Skip if container is null
             container.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-fuel-entry') || e.target.parentElement.classList.contains('remove-fuel-entry')) {
-                    e.target.closest('.fuel-entry').remove();
-                    updateRemoveButtons(container);
+                const button = e.target.closest('.remove-fuel-entry');
+                if (button) {
+                    const fuelEntry = button.closest('.fuel-entry');
+                    if (fuelEntry && container.getElementsByClassName('fuel-entry').length > 1) {
+                        fuelEntry.remove();
+                        updateRemoveButtons(container);
+                    }
                 }
             });
         });
 
-        function updateRemoveButtons(container) {
-            var entries = container.getElementsByClassName('fuel-entry');
-            var removeButtons = container.getElementsByClassName('remove-fuel-entry');
-            for (var i = 0; i < removeButtons.length; i++) {
-                removeButtons[i].disabled = (entries.length <= 1);
-            }
+        // Net weight calculation
+        const tripForm = tripModalElement ? tripModalElement.querySelector('form') : null;
+        if (tripForm) {
+            tripForm.addEventListener('input', function(e) {
+                if (e.target.id === 'gross_weight' || e.target.id === 'tare_weight') {
+                    const gross = parseFloat(document.getElementById('gross_weight').value) || 0;
+                    const tare = parseFloat(document.getElementById('tare_weight').value) || 0;
+                    document.getElementById('net_weight').value = (gross - tare).toFixed(2);
+                }
+            });
         }
-
-        document.addEventListener('input', function() {
-            let gross = parseFloat(document.getElementById('gross_weight').value) || 0;
-            let tare = parseFloat(document.getElementById('tare_weight').value) || 0;
-            document.getElementById('net_weight').value = (gross - tare).toFixed(2);
-        });
     });
 
     // ----------------- Update Trip JavaScript --------------------------------
     $(document).ready(function() {
+        let fuelEntryCount = @if(isset($trip)) {{ $trip->fuels->count() ?: 1 }} @else 1 @endif;
+
         $(document).on('click', '.updateTripBtn', function() {
             let tripId = $(this).data('trip-id');
             $('#updateTripId').val(tripId);
@@ -998,13 +1089,17 @@
                     response.fuels.forEach(function(fuel) {
                         var newEntry = `
                             <div class="fuel-entry row mb-3">
-                                <div class="col-12 col-md-5">
+                                <div class="col-12 col-md-4">
                                     <label for="litres_added_${fuelEntryCount}" class="form-label">Litres Added <span class="text-danger">*</span></label>
                                     <input type="number" step="0.01" name="fuels[${fuelEntryCount}][litres_added]" id="litres_added_${fuelEntryCount}" class="form-control" value="${fuel.litres_added || ''}" placeholder="example: 60" required>
                                 </div>
-                                <div class="col-12 col-md-5">
+                                <div class="col-12 col-md-3">
+                                    <label for="cost_${fuelEntryCount}" class="form-label">Cost per Litre (ZMW)</label>
+                                    <input type="number" step="0.01" name="fuels[${fuelEntryCount}][cost]" id="cost_${fuelEntryCount}" class="form-control" value="${fuel.cost || ''}" placeholder="example: 30.23">
+                                </div>
+                                <div class="col-12 col-md-3">
                                     <label for="refuel_location_${fuelEntryCount}" class="form-label">Refuel Location</label>
-                                    <input type="text" name="fuels[${fuelEntryCount}][refuel_location]" id="refuel_location_${fuelEntryCount}" class="form-control" value="${fuel.refuel_location || ''}" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
+                                    <input type="text" name="fuels[${fuelEntryCount}][refuel_location]" id="refuel_location_${fuelEntryCount}" class="form-control" value="${fuel.refuel_location || ''}" placeholder="example: Site, Chimwemwe Meru Station">
                                 </div>
                                 <div class="col-12 col-md-2 d-flex align-items-end">
                                     <input type="hidden" name="fuels[${fuelEntryCount}][id]" value="${fuel.id || ''}">
@@ -1028,13 +1123,17 @@
         $('#add-fuel-entry-edit-trip').on('click', function() {
             var newEntry = `
                 <div class="fuel-entry row mb-3">
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-4">
                         <label for="litres_added_${fuelEntryCount}" class="form-label">Litres Added <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" name="fuels[${fuelEntryCount}][litres_added]" id="litres_added_${fuelEntryCount}" class="form-control" placeholder="example: 60" required>
                     </div>
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-3">
+                        <label for="cost_${fuelEntryCount}" class="form-label">Cost per Litre (ZMW)</label>
+                        <input type="number" step="0.01" name="fuels[${fuelEntryCount}][cost]" id="cost_${fuelEntryCount}" class="form-control" placeholder="example: 30.23">
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label for="refuel_location_${fuelEntryCount}" class="form-label">Refuel Location</label>
-                        <input type="text" name="fuels[${fuelEntryCount}][refuel_location]" id="refuel_location_${fuelEntryCount}" class="form-control" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
+                        <input type="text" name="fuels[${fuelEntryCount}][refuel_location]" id="refuel_location_${fuelEntryCount}" class="form-control" placeholder="example: Site, Chimwemwe Meru Station">
                     </div>
                     <div class="col-12 col-md-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger remove-fuel-entry"><i class="fas fa-trash"></i></button>

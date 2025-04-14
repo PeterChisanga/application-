@@ -111,7 +111,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($hmvEquipments as $equipment)
-                                        <tr>
+                                        <tr class="{{ $equipment->expiration_class }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
                                             <td>{{ $equipment->equipment_name }}</td>
@@ -175,7 +175,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($lmvEquipments as $equipment)
-                                        <tr>
+                                        <tr class="{{ $equipment->expiration_class }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
                                             <td>{{ $equipment->equipment_name }}</td>
@@ -239,7 +239,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($machineryEquipments as $equipment)
-                                        <tr>
+                                        <tr class="{{ $equipment->expiration_class }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $equipment->registration_number ?? 'N/A' }}</td>
                                             <td>{{ $equipment->equipment_name }}</td>

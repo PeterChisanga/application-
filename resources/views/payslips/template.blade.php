@@ -7,11 +7,6 @@
         <style>
             body {
                 font-family: sans-serif;
-                background-image: url('{{ public_path('images/logo_circle.jpg') }}');
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: 500px;
-                opacity: 1;
             }
 
             .payslip {
@@ -41,7 +36,7 @@
 
             .company-header h1 {
                 margin: 0;
-                color: #510404;
+                color: #000000;
                 font-size: 30px;
                 font-weight: bold;
             }
@@ -52,10 +47,10 @@
                 margin-bottom: 10px;
             }
 
-            .payslip th, .payslip td {
-                padding: 4px;
-                border: 1px solid #000000;
-                font-size: 12px;
+           .payslip th, .payslip td {
+                /* padding: 4px; */
+                border: none;
+                font-size: 7px;
                 text-align: left;
             }
 
@@ -75,31 +70,22 @@
                 margin-bottom: 0px;
             }
 
-            /* Flexbox layout for earnings and deductions tables */
             .tables-container {
                 display: flex;
-                gap: 10px; /* Space between tables */
+                gap: 10px;
             }
 
             .tables-container table {
-                flex: 1; /* Each table takes equal space */
+                flex: 1;
+            }
+
+            .header-row th {
+                border-bottom: 2px solid #000;
             }
         </style>
     </head>
     <body>
         <div class="payslip">
-            <div class="center-text">
-                <img src="{{ public_path('images/logo_circle.jpg') }}" alt="Swarna Metals Logo" class="logo">
-            </div>
-
-            <div class="company-header">
-                <h1>SWARNA METALS ZAMBIA LIMITED</h1>
-            </div>
-
-            <div class="title">
-                <h4><strong>Pay Slip</strong></h4>
-            </div>
-
             <!-- Employee Information -->
             <table>
                 <tr>
@@ -144,17 +130,15 @@
                 </tr>
             </table>
 
-            <!-- Earnings and Deductions in one row -->
-            <h4>Earnings and Deductions</h4>
             <table>
                 <thead>
-                    <tr>
+                    <tr class="header-row">
                         <!-- Earnings headers -->
-                        <th colspan="3">Earnings</th>
+                        <th colspan="3"><h4>Earnings</h4></th>
                         <!-- Spacer -->
                         <th></th>
                         <!-- Deductions headers -->
-                        <th colspan="2">Deductions</th>
+                        <th colspan="2"><h4>Deductions</h4></th>
                     </tr>
                     <tr>
                         <!-- Earnings columns -->
@@ -233,7 +217,7 @@
                         <td></td>
                     </tr>
                     <!-- Totals row -->
-                    <tr>
+                    <tr class="header-row">
                         <th colspan="2">Total Earnings</th>
                         <th>{{ number_format($payslipData['total_earnings'], 2) }}</th>
                         <td></td>
@@ -245,7 +229,7 @@
 
             <table>
                 <tbody>
-                    <tr>
+                    <tr class="header-row">
                         <th>Net Pay:</th>
                         <th>{{ number_format($payslipData['net_pay'], 2) }} ZMW</th>
                     </tr>
@@ -263,27 +247,23 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Tax Paid</td>
-                        <td>{{ number_format($payslipData['tax_paid_ytd'], 2) }}</td>
+                        <th>Tax Paid</th>
+                        <th>{{ number_format($payslipData['tax_paid_ytd'], 2) }}</th>
                     </tr>
                     <tr>
-                        <td>Taxable Earnings</td>
-                        <td>{{ number_format($payslipData['taxable_earnings_ytd'], 2) }}</td>
+                        <th>Taxable Earnings</th>
+                        <th>{{ number_format($payslipData['taxable_earnings_ytd'], 2) }}</th>
                     </tr>
                     <tr>
-                        <td>Annual Leave Due</td>
-                        <td>{{ number_format($payslipData['annual_leave_due'], 2) }}</td>
+                        <th>Annual Leave Due</th>
+                        <th>{{ number_format($payslipData['annual_leave_due'], 2) }}</th>
                     </tr>
                     <tr>
-                        <td>Leave Value</td>
-                        <td>{{ number_format($payslipData['leave_value_ytd'], 2) }}</td>
+                        <th>Leave Value</th>
+                        <th>{{ number_format($payslipData['leave_value_ytd'], 2) }}</th>
                     </tr>
                 </tbody>
             </table>
-
-            <!-- Additional Information -->
-            <h4>Additional Information</h4>
-            <p><strong>Prepared By:</strong> ............................................................................................................................   <strong>Date:</strong> .............................................</p>
         </div>
     </body>
 </html>

@@ -39,6 +39,61 @@ class EquipmentController extends Controller {
         }
     }
 
+    // public function index() {
+    //     try {
+    //         $equipments = Equipment::with(['trips', 'machineryUsages', 'equipmentInsurances', 'equipmentTaxes'])
+    //             ->orderBy('registration_number', 'asc')
+    //             ->get()
+    //             ->map(function ($equipment) {
+    //                 $today = Carbon::today(); // April 11, 2025
+    //                 $oneMonthFromNow = $today->copy()->addMonth(); // May 11, 2025
+
+    //                 // Get latest insurance expiration date
+    //                 $latestInsurance = $equipment->equipmentInsurances->sortByDesc('expiry_date')->first();
+    //                 $latestInsuranceDate = $latestInsurance ? Carbon::parse($latestInsurance->expiration_date) : null;
+
+    //                 // Get latest expiration dates for each tax type
+    //                 $roadTax = $equipment->equipmentTaxes->where('name', 'ROAD TAX')->sortByDesc('expiry_date')->first();
+    //                 $fitnessTax = $equipment->equipmentTaxes->where('name', 'FITNESS TAX')->sortByDesc('expiry_date')->first();
+    //                 $identityTax = $equipment->equipmentTaxes->where('name', 'IDENTITY TAX')->sortByDesc('expiry_date')->first();
+
+    //                 $roadTaxDate = $roadTax ? Carbon::parse($roadTax->expiration_date) : null;
+    //                 $fitnessTaxDate = $fitnessTax ? Carbon::parse($fitnessTax->expiration_date) : null;
+    //                 $identityTaxDate = $identityTax ? Carbon::parse($identityTax->expiration_date) : null;
+
+    //                 // Check for expired (red)
+    //                 $isExpired = ($latestInsuranceDate && $latestInsuranceDate->lt($today)) ||
+    //                             ($roadTaxDate && $roadTaxDate->lt($today)) ||
+    //                             ($fitnessTaxDate && $fitnessTaxDate->lt($today)) ||
+    //                             ($identityTaxDate && $identityTaxDate->lt($today));
+
+    //                 // Check for expiring within 1 month (yellow)
+    //                 $isExpiringSoon = (!$isExpired && (
+    //                     ($latestInsuranceDate && $latestInsuranceDate->lte($oneMonthFromNow)) ||
+    //                     ($roadTaxDate && $roadTaxDate->lte($oneMonthFromNow)) ||
+    //                     ($fitnessTaxDate && $fitnessTaxDate->lte($oneMonthFromNow)) ||
+    //                     ($identityTaxDate && $identityTaxDate->lte($oneMonthFromNow))
+    //                 ));
+
+    //                 // Assign class based on conditions
+    //                 if ($isExpired) {
+    //                     $equipment->expiration_class = 'table-danger'; // Red for expired
+    //                 } elseif ($isExpiringSoon) {
+    //                     $equipment->expiration_class = 'table-warning'; // Yellow for expiring within 1 month
+    //                 } else {
+    //                     $equipment->expiration_class = ''; // No special class
+    //                 }
+
+    //                 return $equipment;
+    //             });
+
+    //         return view('equipments.index', compact('equipments'));
+    //     } catch (Exception $e) {
+    //         \Log::error('Error fetching equipment: ' . $e->getMessage());
+    //         return redirect()->back()->with('error', 'Failed to fetch equipment.');
+    //     }
+    // }
+
     //future update search functionality
     // public function index(Request $request) {
     //     try {
@@ -119,10 +174,25 @@ class EquipmentController extends Controller {
 
     public function show(Equipment $equipment) {
         try {
-            $equipment->load(['trips.driver', 'trips.fuels', 'spares', 'equipmentInsurances', 'equipmentTaxes']);
+            $equipment->load([
+                'trips' => function ($query) {
+                    $query->orderBy('departure_date', 'asc');
+                },
+                'trips.driver',
+                'trips.fuels',
+                'machineryUsages' => function ($query) {
+                    $query->orderBy('date', 'asc');
+                },
+                'machineryUsages.operator',
+                'machineryUsages.fuels',
+                'spares',
+                'equipmentInsurances',
+                'equipmentTaxes'
+            ]);
+
             return view('equipments.show', compact('equipment'));
         } catch (\Exception $e) {
-            \Log::error('Error showing equipment: ' . $e->getMessage());
+            Log::error('Error showing equipment: ' . $e->getMessage());
             return redirect()->back()->with('error', 'An error occurred while fetching equipment details.');
         }
     }
@@ -427,6 +497,63 @@ class EquipmentController extends Controller {
         }
     }
 
+    // ------------------Machinery Usage Methods --------------------------------
+    public function storeMachineryUsage(Request $request) {
+        try {
+            $validated = $request->validate([
+                'equipment_id' => 'required|exists:equipments,id',
+                'operator_id' => 'required|exists:employees,id',
+                'date' => 'required|date',
+                'start_hours' => 'required|numeric|min:0',
+                'closing_hours' => 'nullable|numeric',// this should be added later |gt:start_hours
+                'location' => 'required|string|max:255',
+                'fuels' => 'required|array|min:1',
+                'fuels.*.litres_added' => 'required|numeric|min:0',
+                'fuels.*.cost' => 'nullable|numeric',
+                'fuels.*.refuel_location' => 'nullable|string|max:255',
+            ]);
+
+            \DB::transaction(function () use ($validated) {
+                $usage = MachineryUsage::create([
+                    'equipment_id' => $validated['equipment_id'],
+                    'operator_id' => $validated['operator_id'],
+                    'date' => $validated['date'],
+                    'start_hours' => $validated['start_hours'],
+                    'closing_hours' => $validated['closing_hours'],
+                    'location' => $validated['location'],
+                ]);
+
+                foreach ($validated['fuels'] as $fuelData) {
+                    $usage->fuels()->create([
+                        'trip_id' => null,
+                        'machinery_usage_id' => $usage->id,
+                        'litres_added' => $fuelData['litres_added'],
+                        'cost' => $fuelData['cost'],
+                        'refuel_location' => $fuelData['refuel_location'],
+                    ]);
+                }
+            });
+
+            return redirect()->route('equipments.show', $validated['equipment_id'])->with('success', 'Machinery usage and fuel records added successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->validator)->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Error storing machinery usage: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to add machinery usage: ' . $e->getMessage());
+        }
+    }
+
+    public function lastMachineryUsage($equipment_id) {
+        $lastUsage = MachineryUsage::where('equipment_id', $equipment_id)
+            ->orderBy('date', 'desc')
+            ->first();
+
+        return response()->json([
+            'start_hours' => $lastUsage ? $lastUsage->start_hours : 0,
+            'closing_hours' => $lastUsage ? $lastUsage->closing_hours : null,
+        ]);
+    }
+
     // -------------------Equipment Report Generation Methods -------------------------------
     public function generate(Request $request) {
         $request->validate([
@@ -489,11 +616,11 @@ class EquipmentController extends Controller {
             // Set the title
             $title = "{$equipment->registration_number} - {$equipment->equipment_name} - {$equipment->type} - {$startDate} to {$endDate}";
             $sheet->setCellValue('A1', $title);
-            $sheet->mergeCells('A1:T1');
+            $sheet->mergeCells('A1:V1'); // Extended for new column
             $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
-            // Add headers for trips or machinery
+            // Add headers
             if ($dataType === 'machinery') {
                 $sheet->setCellValue('A2', '#')
                     ->setCellValue('B2', 'Date')
@@ -503,7 +630,8 @@ class EquipmentController extends Controller {
                     ->setCellValue('F2', 'Location')
                     ->setCellValue('G2', 'Operator')
                     ->setCellValue('H2', 'Fuel Logs')
-                    ->setCellValue('I2', 'Total Fuel Used (Litres)');
+                    ->setCellValue('I2', 'Total Fuel Used (Litres)')
+                    ->setCellValue('J2', 'Total Fuel Cost (ZMW)');
             } else {
                 $sheet->setCellValue('A2', '#')
                     ->setCellValue('B2', 'Departure Date')
@@ -518,13 +646,14 @@ class EquipmentController extends Controller {
                     ->setCellValue('K2', 'Gross Weight (tonnes)')
                     ->setCellValue('L2', 'Tare Weight (tonnes)')
                     ->setCellValue('M2', 'Net Weight (tonnes)')
-                    ->setCellValue('N2', 'Loading Cost (ZMK)')
-                    ->setCellValue('O2', 'Council Fee (ZMK)')
-                    ->setCellValue('P2', 'Weighbridge Fee (ZMK)')
-                    ->setCellValue('Q2', 'Toll Gate Fee (ZMK)')
-                    ->setCellValue('R2', 'Other Expenses (ZMK)')
+                    ->setCellValue('N2', 'Loading Cost (ZMW)')
+                    ->setCellValue('O2', 'Council Fee (ZMW)')
+                    ->setCellValue('P2', 'Weighbridge Fee (ZMW)')
+                    ->setCellValue('Q2', 'Toll Gate Fee (ZMW)')
+                    ->setCellValue('R2', 'Other Expenses (ZMW)')
                     ->setCellValue('S2', 'Fuel Logs')
-                    ->setCellValue('T2', 'Total Fuel Used (Litres)');
+                    ->setCellValue('T2', 'Total Fuel Used (Litres)')
+                    ->setCellValue('U2', 'Total Fuel Cost (ZMW)');
             }
 
             // Style headers
@@ -534,11 +663,12 @@ class EquipmentController extends Controller {
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D3D3D3']]
             ];
-            $sheet->getStyle('A2:' . ($dataType === 'machinery' ? 'I2' : 'T2'))->applyFromArray($headerStyle);
+            $sheet->getStyle('A2:' . ($dataType === 'machinery' ? 'K2' : 'V2'))->applyFromArray($headerStyle);
 
             // Add data rows
             $row = 3;
             $totalFuelUsed = 0;
+            $totalFuelCost = 0; // Initialize
             $totalDistanceOrHours = 0;
             $totalLoadingCost = 0;
             $totalCouncilFee = 0;
@@ -548,8 +678,12 @@ class EquipmentController extends Controller {
 
             foreach ($data as $item) {
                 $fuelLogs = $item->fuels->map(function ($fuel) {
-                    return "{$fuel->litres_added}L at {$fuel->refuel_location}";
+                    return number_format($fuel->litres_added, 2) . "L at " . ($fuel->refuel_location ?? 'Unknown') . " / " . ($fuel->cost !== null && $fuel->cost !== 0 ? number_format($fuel->cost, 2) : '-') . " ZMW/L";
                 })->implode(' | ');
+
+                $itemFuelCost = $item->fuels->sum(function ($fuel) {
+                    return $fuel->cost !== null ? $fuel->litres_added * $fuel->cost : 0;
+                });
 
                 if ($dataType === 'machinery') {
                     $date = $item->date ? Carbon::parse($item->date)->format('Y/m/d') : '-';
@@ -563,7 +697,8 @@ class EquipmentController extends Controller {
                         ->setCellValue('F' . $row, $item->location)
                         ->setCellValue('G' . $row, $item->operator->employee_full_name ?? '-')
                         ->setCellValue('H' . $row, $fuelLogs ?: 'No fuel data')
-                        ->setCellValue('I' . $row, number_format($item->fuels->sum('litres_added'), 2));
+                        ->setCellValue('I' . $row, number_format($item->fuels->sum('litres_added'), 2))
+                        ->setCellValue('J' . $row, $itemFuelCost > 0 ? number_format($itemFuelCost, 2) : '-');
 
                     $totalDistanceOrHours += $hoursUsed;
                 } else {
@@ -590,7 +725,8 @@ class EquipmentController extends Controller {
                         ->setCellValue('Q' . $row, $item->toll_gate ? number_format($item->toll_gate, 2) : '-')
                         ->setCellValue('R' . $row, $item->other_expenses ? number_format($item->other_expenses, 2) : '-')
                         ->setCellValue('S' . $row, $fuelLogs ?: 'No fuel data')
-                        ->setCellValue('T' . $row, number_format($item->fuels->sum('litres_added'), 2));
+                        ->setCellValue('T' . $row, number_format($item->fuels->sum('litres_added'), 2))
+                        ->setCellValue('U' . $row, $itemFuelCost > 0 ? number_format($itemFuelCost, 2) : '-');
 
                     $totalDistanceOrHours += $distanceTravelled;
                     $totalLoadingCost += $item->loading ?? 0;
@@ -601,20 +737,21 @@ class EquipmentController extends Controller {
                 }
 
                 $totalFuelUsed += $item->fuels->sum('litres_added');
+                $totalFuelCost += $itemFuelCost;
                 $row++;
             }
 
-            // Add associated costs section (common to both)
+            // Add associated costs section
             $row++;
             $sheet->setCellValue('A' . $row, 'Associated Costs');
-            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'I' : 'T') . $row);
+            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'K' : 'V') . $row);
             $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
             $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
             $row++;
             $sheet->setCellValue('A' . $row, 'Type')
                 ->setCellValue('B' . $row, 'Details')
-                ->setCellValue('C' . $row, 'Amount (ZMK)')
+                ->setCellValue('C' . $row, 'Amount (ZMW)')
                 ->setCellValue('D' . $row, 'Expiry Date');
             $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray($headerStyle);
 
@@ -646,9 +783,9 @@ class EquipmentController extends Controller {
             // Add summary section
             $row++;
             $sheet->setCellValue('A' . $row, 'Summary');
-            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'I' : 'T') . $row);
+            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'K' : 'V') . $row);
             $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
 
             $totalInsuranceCost = $equipment->equipmentInsurances()->sum('premium');
             $totalTaxCost = $equipment->equipmentTaxes()->sum('cost');
@@ -663,14 +800,18 @@ class EquipmentController extends Controller {
                     ->setCellValue('G' . ($summaryRow + 1), number_format($totalFuelUsed, 2) . ' Litres')
                     ->setCellValue('F' . ($summaryRow + 2), 'Average Fuel Per Hour:')
                     ->setCellValue('G' . ($summaryRow + 2), ($totalDistanceOrHours > 0 && $totalFuelUsed > 0) ? number_format($totalFuelUsed / $totalDistanceOrHours, 2) . ' Litres/Hour' : '- Litres/Hour')
-                    ->setCellValue('F' . ($summaryRow + 3), 'Total Insurance Cost:')
-                    ->setCellValue('G' . ($summaryRow + 3), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2) . ' ZMK' : '- ZMK')
-                    ->setCellValue('F' . ($summaryRow + 4), 'Total Tax Cost:')
-                    ->setCellValue('G' . ($summaryRow + 4), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMK' : '- ZMK')
-                    ->setCellValue('F' . ($summaryRow + 5), 'Total Spare Cost:')
-                    ->setCellValue('G' . ($summaryRow + 5), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMK' : '- ZMK');
+                    ->setCellValue('F' . ($summaryRow + 3), 'Total Fuel Cost:')
+                    ->setCellValue('G' . ($summaryRow + 3), $totalFuelCost > 0 ? number_format($totalFuelCost, 2) . ' ZMW' : '-')
+                    ->setCellValue('F' . ($summaryRow + 4), 'Average Fuel Cost Per Hour:')
+                    ->setCellValue('G' . ($summaryRow + 4), ($totalDistanceOrHours > 0 && $totalFuelCost > 0) ? number_format($totalFuelCost / $totalDistanceOrHours, 2) . ' ZMW/Hour' : '-')
+                    ->setCellValue('F' . ($summaryRow + 5), 'Total Insurance Cost:')
+                    ->setCellValue('G' . ($summaryRow + 5), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2) . ' ZMW' : '-')
+                    ->setCellValue('F' . ($summaryRow + 6), 'Total Tax Cost:')
+                    ->setCellValue('G' . ($summaryRow + 6), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMW' : '-')
+                    ->setCellValue('F' . ($summaryRow + 7), 'Total Spare Cost:')
+                    ->setCellValue('G' . ($summaryRow + 7), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMW' : '-');
 
-                $summaryStyleRange = 'A' . $summaryRow . ':G' . ($summaryRow + 5);
+                $summaryStyleRange = 'A' . $summaryRow . ':G' . ($summaryRow + 7);
             } else {
                 $sheet->setCellValue('F' . $summaryRow, 'Total Distance Travelled:')
                     ->setCellValue('G' . $summaryRow, ($totalDistanceOrHours > 0) ? number_format($totalDistanceOrHours, 2) . ' Km' : '- Km')
@@ -678,26 +819,30 @@ class EquipmentController extends Controller {
                     ->setCellValue('G' . ($summaryRow + 1), number_format($totalFuelUsed, 2) . ' Litres')
                     ->setCellValue('F' . ($summaryRow + 2), 'Average Fuel Per Kilometer:')
                     ->setCellValue('G' . ($summaryRow + 2), ($totalDistanceOrHours > 0 && $totalFuelUsed > 0) ? number_format($totalFuelUsed / $totalDistanceOrHours, 2) . ' Litres/Km' : '- Litres/Km')
-                    ->setCellValue('F' . ($summaryRow + 3), 'Total Net Weight (Material Delivered):')
-                    ->setCellValue('G' . ($summaryRow + 3), number_format($data->sum('net_weight'), 2) . ' Tonnes')
-                    ->setCellValue('F' . ($summaryRow + 4), 'Total Loading Cost:')
-                    ->setCellValue('G' . ($summaryRow + 4), number_format($totalLoadingCost, 2) . ' ZMK')
-                    ->setCellValue('F' . ($summaryRow + 5), 'Total Council Fee:')
-                    ->setCellValue('G' . ($summaryRow + 5), number_format($totalCouncilFee, 2) . ' ZMK')
-                    ->setCellValue('F' . ($summaryRow + 6), 'Total Weighbridge Fee:')
-                    ->setCellValue('G' . ($summaryRow + 6), number_format($totalWeighbridgeFee, 2) . ' ZMK')
-                    ->setCellValue('F' . ($summaryRow + 7), 'Total Toll Gate Fee:')
-                    ->setCellValue('G' . ($summaryRow + 7), number_format($totalTollGateFee, 2) . ' ZMK')
-                    ->setCellValue('F' . ($summaryRow + 8), 'Total Other Expenses:')
-                    ->setCellValue('G' . ($summaryRow + 8), number_format($totalOtherExpenses, 2) . ' ZMK')
-                    ->setCellValue('F' . ($summaryRow + 9), 'Total Insurance Cost:')
-                    ->setCellValue('G' . ($summaryRow + 9), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2) . ' ZMK' : '- ZMK')
-                    ->setCellValue('F' . ($summaryRow + 10), 'Total Tax Cost:')
-                    ->setCellValue('G' . ($summaryRow + 10), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMK' : '- ZMK')
-                    ->setCellValue('F' . ($summaryRow + 11), 'Total Spare Cost:')
-                    ->setCellValue('G' . ($summaryRow + 11), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMK' : '- ZMK');
+                    ->setCellValue('F' . ($summaryRow + 3), 'Total Fuel Cost:')
+                    ->setCellValue('G' . ($summaryRow + 3), $totalFuelCost > 0 ? number_format($totalFuelCost, 2) . ' ZMW' : '-')
+                    ->setCellValue('F' . ($summaryRow + 4), 'Average Fuel Cost Per Kilometer:')
+                    ->setCellValue('G' . ($summaryRow + 4), ($totalDistanceOrHours > 0 && $totalFuelCost > 0) ? number_format($totalFuelCost / $totalDistanceOrHours, 2) . ' ZMW/Km' : '-')
+                    ->setCellValue('F' . ($summaryRow + 5), 'Total Net Weight (Material Delivered):')
+                    ->setCellValue('G' . ($summaryRow + 5), number_format($data->sum('net_weight'), 2) . ' Tonnes')
+                    ->setCellValue('F' . ($summaryRow + 6), 'Total Loading Cost:')
+                    ->setCellValue('G' . ($summaryRow + 6), number_format($totalLoadingCost, 2) . ' ZMW')
+                    ->setCellValue('F' . ($summaryRow + 7), 'Total Council Fee:')
+                    ->setCellValue('G' . ($summaryRow + 7), number_format($totalCouncilFee, 2) . ' ZMW')
+                    ->setCellValue('F' . ($summaryRow + 8), 'Total Weighbridge Fee:')
+                    ->setCellValue('G' . ($summaryRow + 8), number_format($totalWeighbridgeFee, 2) . ' ZMW')
+                    ->setCellValue('F' . ($summaryRow + 9), 'Total Toll Gate Fee:')
+                    ->setCellValue('G' . ($summaryRow + 9), number_format($totalTollGateFee, 2) . ' ZMW')
+                    ->setCellValue('F' . ($summaryRow + 10), 'Total Other Expenses:')
+                    ->setCellValue('G' . ($summaryRow + 10), number_format($totalOtherExpenses, 2) . ' ZMW')
+                    ->setCellValue('F' . ($summaryRow + 11), 'Total Insurance Cost:')
+                    ->setCellValue('G' . ($summaryRow + 11), ($totalInsuranceCost > 0) ? number_format($totalInsuranceCost, 2) . ' ZMW' : '-')
+                    ->setCellValue('F' . ($summaryRow + 12), 'Total Tax Cost:')
+                    ->setCellValue('G' . ($summaryRow + 12), ($totalTaxCost > 0) ? number_format($totalTaxCost, 2) . ' ZMW' : '-')
+                    ->setCellValue('F' . ($summaryRow + 13), 'Total Spare Cost:')
+                    ->setCellValue('G' . ($summaryRow + 13), ($totalSpareCost > 0) ? number_format($totalSpareCost, 2) . ' ZMW' : '-');
 
-                $summaryStyleRange = 'A' . $summaryRow . ':G' . ($summaryRow + 11);
+                $summaryStyleRange = 'A' . $summaryRow . ':G' . ($summaryRow + 13);
             }
 
             $summaryStyle = [
@@ -707,7 +852,7 @@ class EquipmentController extends Controller {
             $sheet->getStyle($summaryStyleRange)->applyFromArray($summaryStyle);
 
             // Auto-size columns
-            foreach (range('A', $dataType === 'machinery' ? 'I' : 'T') as $column) {
+            foreach (range('A', $dataType === 'machinery' ? 'K' : 'V') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
 
@@ -719,64 +864,9 @@ class EquipmentController extends Controller {
 
             return response()->download($filePath, $filename)->deleteFileAfterSend();
         } catch (\Exception $e) {
-            \Log::error('CSV Generation Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to generate CSV file: ' . $e->getMessage())->withInput();
+            \Log::error('Excel Generation Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate Excel file: ' . $e->getMessage())->withInput();
         }
-    }
-
-    // ------------------Machinery Usage Methods --------------------------------
-    public function storeMachineryUsage(Request $request) {
-        try {
-            $validated = $request->validate([
-                'equipment_id' => 'required|exists:equipments,id',
-                'operator_id' => 'required|exists:employees,id',
-                'date' => 'required|date',
-                'start_hours' => 'required|numeric|min:0',
-                'closing_hours' => 'nullable|numeric',// this should be added later |gt:start_hours
-                'location' => 'required|string|max:255',
-                'fuels' => 'required|array|min:1',
-                'fuels.*.litres_added' => 'required|numeric|min:0',
-                'fuels.*.refuel_location' => 'nullable|string|max:255',
-            ]);
-
-            \DB::transaction(function () use ($validated) {
-                $usage = MachineryUsage::create([
-                    'equipment_id' => $validated['equipment_id'],
-                    'operator_id' => $validated['operator_id'],
-                    'date' => $validated['date'],
-                    'start_hours' => $validated['start_hours'],
-                    'closing_hours' => $validated['closing_hours'],
-                    'location' => $validated['location'],
-                ]);
-
-                foreach ($validated['fuels'] as $fuelData) {
-                    $usage->fuels()->create([
-                        'trip_id' => null,
-                        'machinery_usage_id' => $usage->id,
-                        'litres_added' => $fuelData['litres_added'],
-                        'refuel_location' => $fuelData['refuel_location'],
-                    ]);
-                }
-            });
-
-            return redirect()->route('equipments.show', $validated['equipment_id'])->with('success', 'Machinery usage and fuel records added successfully.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return redirect()->back()->withErrors($e->validator)->withInput();
-        } catch (\Exception $e) {
-            \Log::error('Error storing machinery usage: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to add machinery usage: ' . $e->getMessage());
-        }
-    }
-
-    public function lastMachineryUsage($equipment_id) {
-        $lastUsage = MachineryUsage::where('equipment_id', $equipment_id)
-            ->orderBy('date', 'desc')
-            ->first();
-
-        return response()->json([
-            'start_hours' => $lastUsage ? $lastUsage->start_hours : 0,
-            'closing_hours' => $lastUsage ? $lastUsage->closing_hours : null,
-        ]);
     }
 
     // ---------------------------Spares Methods-------------------------

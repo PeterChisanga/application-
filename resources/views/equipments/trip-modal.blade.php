@@ -187,27 +187,72 @@
 
         <h4 class="mt-4">Fuel Information</h4>
         <div id="fuel-entries-edit-trip">
-            <div class="fuel-entry row mb-3">
-                <div class="col-12 col-md-5">
-                    <label for="litres_added[]" class="form-label">Litres Added <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" name="fuels[0][litres_added]" class="form-control @error('fuels.0.litres_added') is-invalid @enderror"
-                        value="{{ old('fuels.0.litres_added') }}" placeholder="example: 60" required>
-                    @error('fuels.0.litres_added')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+            @if(isset($trip) && $trip->fuels)
+                @foreach($trip->fuels as $index => $fuel)
+                    <div class="fuel-entry row mb-3" data-fuel-id="{{ $fuel->id }}">
+                        <div class="col-12 col-md-4">
+                            <label for="litres_added_{{ $index }}" class="form-label">Litres Added <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="fuels[{{ $index }}][litres_added]" id="litres_added_{{ $index }}" class="form-control @error('fuels.' . $index . '.litres_added') is-invalid @enderror"
+                                value="{{ old('fuels.' . $index . '.litres_added', $fuel->litres_added) }}" placeholder="example: 60" required>
+                            @error('fuels.' . $index . '.litres_added')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="cost_{{ $index }}" class="form-label">Cost per Litre (ZMW)</label>
+                            <input type="number" step="0.01" name="fuels[{{ $index }}][cost]" id="cost_{{ $index }}" class="form-control @error('fuels.' . $index . '.cost') is-invalid @enderror"
+                                value="{{ old('fuels.' . $index . '.cost', $fuel->cost) }}" placeholder="example: 30.23">
+                            @error('fuels.' . $index . '.cost')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="refuel_location_{{ $index }}" class="form-label">Refuel Location</label>
+                            <input type="text" name="fuels[{{ $index }}][refuel_location]" id="refuel_location_{{ $index }}" class="form-control @error('fuels.' . $index . '.refuel_location') is-invalid @enderror"
+                                value="{{ old('fuels.' . $index . '.refuel_location', $fuel->refuel_location) }}" placeholder="example: Site, Chimwemwe Meru Station">
+                            @error('fuels.' . $index . '.refuel_location')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-2 d-flex align-items-end">
+                            <input type="hidden" name="fuels[{{ $index }}][id]" value="{{ $fuel->id }}">
+                            <button type="button" class="btn btn-danger remove-fuel-entry" {{ $loop->first ? 'disabled' : '' }}><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+
+            @if(!isset($trip) || (isset($trip) && $trip->fuels->isEmpty()))
+                <div class="fuel-entry row mb-3">
+                    <div class="col-12 col-md-4">
+                        <label for="litres_added_0" class="form-label">Litres Added <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="fuels[0][litres_added]" id="litres_added_0" class="form-control @error('fuels.0.litres_added') is-invalid @enderror"
+                            value="{{ old('fuels.0.litres_added') }}" placeholder="example: 60" required>
+                        @error('fuels.0.litres_added')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label for="cost_0" class="form-label">Cost per Litre (ZMW)</label>
+                        <input type="number" step="0.01" name="fuels[0][cost]" id="cost_0" class="form-control @error('fuels.0.cost') is-invalid @enderror"
+                            value="{{ old('fuels.0.cost') }}" placeholder="example: 30.23">
+                        @error('fuels.0.cost')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label for="refuel_location_0" class="form-label">Refuel Location</label>
+                        <input type="text" name="fuels[0][refuel_location]" id="refuel_location_0" class="form-control @error('fuels.0.refuel_location') is-invalid @enderror"
+                            value="{{ old('fuels.0.refuel_location') }}" placeholder="example: Site, Chimwemwe Meru Station">
+                        @error('fuels.0.refuel_location')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-12 col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger remove-fuel-entry" disabled><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-                <div class="col-12 col-md-5">
-                    <label for="refuel_location[]" class="form-label">Refuel Location</label>
-                    <input type="text" name="fuels[0][refuel_location]" class="form-control @error('fuels.0.refuel_location') is-invalid @enderror"
-                        value="{{ old('fuels.0.refuel_location') }}" placeholder="example: Site, Chimwemwe Meru Station, Kalulushi Meru Station">
-                    @error('fuels.0.refuel_location')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="col-12 col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger remove-fuel-entry" disabled><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
+            @endif
         </div>
         <button type="button" class="btn btn-primary mb-3" id="add-fuel-entry-edit-trip"><i class="fas fa-plus"></i> Add Another Fuel Entry</button>
 
