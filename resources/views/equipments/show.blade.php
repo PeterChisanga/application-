@@ -152,6 +152,7 @@
                                             <th>Location</th>
                                             <th>Fuel Records</th>
                                             <th>Total Fuel Used</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -181,20 +182,21 @@
                                                                         <span class="text-muted">at {{ $fuel->refuel_location }}</span>
                                                                     @endif
                                                                     @if ($fuel->cost !== null)
-                                                                        <span class="text-muted">({{ number_format($fuel->cost, 2) }} ZMK)</span>
+                                                                        <span class="text-muted">({{ number_format($fuel->cost, 2) }} ZMW)</span>
                                                                     @endif
                                                                 </li>
                                                             @endforeach
                                                         </ul>
                                                     @endif
                                                 </td>
-                                                <?php
-                                                    $totalFuelCost = $usage->fuels->sum(function ($fuel) {
-                                                        return $fuel->cost !== null ? $fuel->litres_added * $fuel->cost : 0;
-                                                    });
-                                                ?>
+                                                @php
+                                                    $totalFuelCost = $usage->fuels->sum(fn($fuel) => $fuel->cost !== null ? $fuel->litres_added * $fuel->cost : 0);
+                                                @endphp
                                                 <td>{{ number_format($usage->fuels->sum('litres_added'), 2) }} Litres
                                                 <span class="text-muted">({{ $totalFuelCost > 0 ? number_format($totalFuelCost, 2) . ' ZMW' : '-' }})</span>
+                                                </td>
+                                                <td>
+                                                    <a class="btn btn-sm btn-warning" href="{{ route('machinery_usages.edit', $usage->id) }}"><i class="fas fa-edit"></i> Edit</a>
                                                 </td>
                                             </tr>
                                         @empty
@@ -301,7 +303,7 @@
                                                             data-bs-toggle="modal"
                                                             data-bs-target="#updateTripModal"
                                                             data-trip-id="{{ $trip->id }}">
-                                                        <i class="fas fa-edit"></i> Update
+                                                        <i class="fas fa-edit"></i> Edit
                                                     </button>
                                                 </td>
                                             </tr>

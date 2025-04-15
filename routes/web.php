@@ -114,6 +114,8 @@ Route::middleware(['auth'])->group(function () {
         // Machinery Usage Routes
         Route::post('/machinery-usages/store', [EquipmentController::class, 'storeMachineryUsage'])->name('machinery_usages.store');
         Route::get('/machinery-usages/last-usage/{equipment_id}', [EquipmentController::class, 'lastMachineryUsage'])->name('machinery_usages.last');
+        Route::get('/machinery-usages/edit/{machinery_usage_id}', [EquipmentController::class, 'editMachineryUsage'])->name('machinery_usages.edit');
+        Route::put('/machinery-usages/update', [EquipmentController::class, 'updateMachineryUsage'])->name('machinery_usages.update');
 
         // Spares Routes
         Route::get('/equipment-spares/create/{equipment}', [EquipmentController::class, 'createSpare'])->name('equipment_spares.create');

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Equipment;
+use App\Models\Employee;
 use App\Models\Trip;
+use App\Models\Fuel;
 use App\Models\Spare;
 use App\Models\EquipmentInsurance;
 use App\Models\EquipmentTax;
@@ -26,66 +28,11 @@ use Carbon\Carbon;
 
 class EquipmentController extends Controller {
 
-    public function index() {
-        try {
-            $equipments = Equipment::with(['trips', 'machineryUsages'])
-                ->orderBy('registration_number', 'asc') // Sort by equipment_name alphabetically
-                ->get();
-
-            return view('equipments.index', compact('equipments'));
-        } catch (Exception $e) {
-            \Log::error('Error fetching equipment: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to fetch equipment.');
-        }
-    }
-
     // public function index() {
     //     try {
-    //         $equipments = Equipment::with(['trips', 'machineryUsages', 'equipmentInsurances', 'equipmentTaxes'])
-    //             ->orderBy('registration_number', 'asc')
-    //             ->get()
-    //             ->map(function ($equipment) {
-    //                 $today = Carbon::today(); // April 11, 2025
-    //                 $oneMonthFromNow = $today->copy()->addMonth(); // May 11, 2025
-
-    //                 // Get latest insurance expiration date
-    //                 $latestInsurance = $equipment->equipmentInsurances->sortByDesc('expiry_date')->first();
-    //                 $latestInsuranceDate = $latestInsurance ? Carbon::parse($latestInsurance->expiration_date) : null;
-
-    //                 // Get latest expiration dates for each tax type
-    //                 $roadTax = $equipment->equipmentTaxes->where('name', 'ROAD TAX')->sortByDesc('expiry_date')->first();
-    //                 $fitnessTax = $equipment->equipmentTaxes->where('name', 'FITNESS TAX')->sortByDesc('expiry_date')->first();
-    //                 $identityTax = $equipment->equipmentTaxes->where('name', 'IDENTITY TAX')->sortByDesc('expiry_date')->first();
-
-    //                 $roadTaxDate = $roadTax ? Carbon::parse($roadTax->expiration_date) : null;
-    //                 $fitnessTaxDate = $fitnessTax ? Carbon::parse($fitnessTax->expiration_date) : null;
-    //                 $identityTaxDate = $identityTax ? Carbon::parse($identityTax->expiration_date) : null;
-
-    //                 // Check for expired (red)
-    //                 $isExpired = ($latestInsuranceDate && $latestInsuranceDate->lt($today)) ||
-    //                             ($roadTaxDate && $roadTaxDate->lt($today)) ||
-    //                             ($fitnessTaxDate && $fitnessTaxDate->lt($today)) ||
-    //                             ($identityTaxDate && $identityTaxDate->lt($today));
-
-    //                 // Check for expiring within 1 month (yellow)
-    //                 $isExpiringSoon = (!$isExpired && (
-    //                     ($latestInsuranceDate && $latestInsuranceDate->lte($oneMonthFromNow)) ||
-    //                     ($roadTaxDate && $roadTaxDate->lte($oneMonthFromNow)) ||
-    //                     ($fitnessTaxDate && $fitnessTaxDate->lte($oneMonthFromNow)) ||
-    //                     ($identityTaxDate && $identityTaxDate->lte($oneMonthFromNow))
-    //                 ));
-
-    //                 // Assign class based on conditions
-    //                 if ($isExpired) {
-    //                     $equipment->expiration_class = 'table-danger'; // Red for expired
-    //                 } elseif ($isExpiringSoon) {
-    //                     $equipment->expiration_class = 'table-warning'; // Yellow for expiring within 1 month
-    //                 } else {
-    //                     $equipment->expiration_class = ''; // No special class
-    //                 }
-
-    //                 return $equipment;
-    //             });
+    //         $equipments = Equipment::with(['trips', 'machineryUsages'])
+    //             ->orderBy('registration_number', 'asc') // Sort by equipment_name alphabetically
+    //             ->get();
 
     //         return view('equipments.index', compact('equipments'));
     //     } catch (Exception $e) {
@@ -94,6 +41,53 @@ class EquipmentController extends Controller {
     //     }
     // }
 
+    public function index() {
+        try {
+            $equipments = Equipment::with(['trips', 'machineryUsages', 'equipmentInsurances', 'equipmentTaxes'])
+                ->orderBy('registration_number', 'asc')
+                ->get()
+                ->map(function ($equipment) {
+                    $today = Carbon::today();
+                    $oneMonthFromNow = $today->copy()->addMonth();
+
+                    $latestInsurance = $equipment->equipmentInsurances->sortByDesc('expiry_date')->first();
+                    $latestInsuranceDate = $latestInsurance ? Carbon::parse($latestInsurance->expiry_date) : null;
+
+                    $taxesByName = $equipment->equipmentTaxes
+                        ->groupBy('name')
+                        ->map(function ($taxes) {
+                            return $taxes->sortByDesc('expiry_date')->first();
+                        });
+
+                    $taxDates = $taxesByName->map(function ($tax) {
+                        return $tax ? Carbon::parse($tax->expiry_date) : null;
+                    })->filter();
+
+                    $isExpired = ($latestInsuranceDate && $latestInsuranceDate->lt($today)) ||
+                                $taxDates->contains(fn($date) => $date->lt($today));
+
+                    $isExpiringSoon = (!$isExpired && (
+                        ($latestInsuranceDate && $latestInsuranceDate->lte($oneMonthFromNow)) ||
+                        $taxDates->contains(fn($date) => $date->lte($oneMonthFromNow))
+                    ));
+
+                    if ($isExpired) {
+                        $equipment->expiration_class = 'table-danger'; // Red for expired
+                    } elseif ($isExpiringSoon) {
+                        $equipment->expiration_class = 'table-warning'; // Yellow for expiring within 1 month
+                    } else {
+                        $equipment->expiration_class = ''; // No special class
+                    }
+
+                    return $equipment;
+                });
+
+            return view('equipments.index', compact('equipments'));
+        } catch (Exception $e) {
+            \Log::error('Error fetching equipment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to fetch equipment.');
+        }
+    }
     //future update search functionality
     // public function index(Request $request) {
     //     try {
@@ -543,6 +537,78 @@ class EquipmentController extends Controller {
         }
     }
 
+    public function editMachineryUsage($machinery_usage_id) {
+        try {
+            $usage = MachineryUsage::with(['operator', 'fuels', 'equipment'])->findOrFail($machinery_usage_id);
+            if ($usage->equipment->type !== 'Machinery') {
+                return redirect()->back()->with('error', 'Editing only available for Machinery usage.');
+            }
+            $operators = Employee::orderBy('first_name')->get(['id', 'employee_full_name', 'designation']);
+            return view('machinery_usages.edit', compact('usage', 'operators'));
+        } catch (\Exception $e) {
+            \Log::error('Error fetching machinery usage: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load machinery usage.');
+        }
+    }
+
+    public function updateMachineryUsage(Request $request) {
+        try {
+            $usage = MachineryUsage::findOrFail($request->input('id'));
+            if ($usage->equipment->type !== 'Machinery') {
+                return redirect()->back()->with('error', 'Updating only available for Machinery usage.');
+            }
+
+            $validated = $request->validate([
+                'date' => 'required|date',
+                'operator_id' => 'nullable|exists:employees,id',
+                'start_hours' => 'nullable|numeric|min:0',
+                'closing_hours' => 'nullable|numeric|min:0|gte:start_hours',
+                'location' => 'nullable|string|max:255',
+                'fuels.*.litres_added' => 'required|numeric|min:0',
+                'fuels.*.cost' => 'nullable|numeric|min:0',
+                'fuels.*.refuel_location' => 'nullable|string|max:255',
+                'fuels.*.id' => 'nullable|exists:fuels,id',
+            ]);
+
+            \DB::transaction(function () use ($validated, $usage) {
+                $usage->update([
+                    'date' => $validated['date'],
+                    'operator_id' => $validated['operator_id'],
+                    'start_hours' => $validated['start_hours'],
+                    'closing_hours' => $validated['closing_hours'],
+                    'location' => $validated['location'],
+                ]);
+
+                // Update or create fuels
+                $existingFuelIds = [];
+                foreach ($validated['fuels'] as $fuelData) {
+                    $fuel = isset($fuelData['id']) ? Fuel::find($fuelData['id']) : new Fuel();
+                    if (!$fuel) {
+                        $fuel = new Fuel();
+                    }
+                    $fuel->fill([
+                        'litres_added' => $fuelData['litres_added'],
+                        'cost' => $fuelData['cost'],
+                        'refuel_location' => $fuelData['refuel_location'],
+                    ]);
+                    $usage->fuels()->save($fuel);
+                    $existingFuelIds[] = $fuel->id;
+                }
+
+                // Delete removed fuels
+                $usage->fuels()->whereNotIn('id', $existingFuelIds)->delete();
+            });
+
+            return redirect()->route('equipments.show', $usage->equipment_id)
+                ->with('success', 'Machinery usage updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->validator)->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Error updating machinery usage: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update machinery usage.');
+        }
+    }
+
     public function lastMachineryUsage($equipment_id) {
         $lastUsage = MachineryUsage::where('equipment_id', $equipment_id)
             ->orderBy('date', 'desc')
@@ -704,7 +770,7 @@ class EquipmentController extends Controller {
                 } else {
                     $departureDate = $item->departure_date ? Carbon::parse($item->departure_date)->format('Y/m/d') : '-';
                     $returnDate = $item->return_date ? Carbon::parse($item->return_date)->format('Y/m/d') : '-';
-                    $distanceTravelled = ($item->end_kilometers && $item->start_kilometers) ? ($item->end_kilometers - $item->start_kilometers) : 0;
+                    $distanceTravelled = ($item->end_kilometers > 0 && $item->start_kilometers > 0) ? ($item->end_kilometers - $item->start_kilometers) : 0;
 
                     $sheet->setCellValue('A' . $row, $row - 2)
                         ->setCellValue('B' . $row, $departureDate)
@@ -792,7 +858,6 @@ class EquipmentController extends Controller {
             $totalSpareCost = $equipment->spares()->sum('price');
 
             $summaryRow = $row + 1;
-            $sheet->setCellValue('A' . $summaryRow, 'Summary');
             if ($dataType === 'machinery') {
                 $sheet->setCellValue('F' . $summaryRow, 'Total Hours Worked:')
                     ->setCellValue('G' . $summaryRow, ($totalDistanceOrHours > 0) ? number_format($totalDistanceOrHours, 2) . ' Hours' : '- Hours')
