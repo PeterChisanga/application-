@@ -47,10 +47,17 @@
                 margin-bottom: 10px;
             }
 
-           .payslip th, .payslip td {
+            .payslip th {
                 /* padding: 4px; */
                 border: none;
-                font-size: 7px;
+                font-size: 12px;
+                text-align: left;
+            }
+
+           .payslip td {
+                /* padding: 4px; */
+                border: none;
+                font-size: 14px;
                 text-align: left;
             }
 
@@ -87,49 +94,33 @@
     <body>
         <div class="payslip">
             <!-- Employee Information -->
-            <table>
+            <table class="table table-bordered table-sm">
                 <tr>
-                    <th>EMP NR:</th>
-                    <td>{{ $employee->employee_id }}</td>
-                    <th>PAY POINT:</th>
-                    <td>KITWE</td>
-                    <th>Pay Period:</th>
-                    <td>{{ \Carbon\Carbon::parse($payslipData['pay_period'])->format('Y-m-d') }}</td>
+                    <td><strong>EMP NR:</strong> {{ $employee->employee_id ?? '-' }}</td>
+                    <td><strong>PAY POINT:</strong> KITWE</td>
+                    <td><strong>PAY PERIOD:</strong> {{ isset($payslipData['pay_period']) ? \Carbon\Carbon::parse($payslipData['pay_period'])->format('Y-m-d') : '-' }}</td>
                 </tr>
                 <tr>
-                    <th>EMP NAME:</th>
-                    <td>{{ $employee->first_name }}</td>
-                    <th>PAY GRADE:</th>
-                    <td>{{ $employee->grade }}</td>
-                    <th>CO NAME</th>
-                    <td>SWARNA METALS (Z) LTD</td>
+                    <td><strong>EMP NAME:</strong> {{ $employee->first_name ?? '-' }} </td>
+                    <td><strong>PAY GRADE:</strong> {{ $employee->grade ?? '-' }}</td>
+                    <td><strong>CO NAME:</strong> SWARNA METALS (Z) LTD</td>
                 </tr>
                 <tr>
-                    <th>KNOWN AS:</th>
-                    <td>{{ $employee->employee_full_name }}</td>
-                    <th>BASIC RATE:</th>
-                    <td>{{ number_format($employee->basic_salary, 2) }} ZMW</td>
-                    <th>CO ADDRESS:</th>
-                    <td>FARM SUB-A 4213 KITWE</td>
+                    <td><strong>KNOWN AS:</strong> {{ $employee->employee_full_name ?? '-' }} </td>
+                    <td><strong>BASIC RATE:</strong> {{ isset($employee->basic_salary) ? number_format($employee->basic_salary, 2) : '-' }} ZMW</td>
+                    <td><strong>CO ADDRESS:</strong> FARM SUB-A 4213 KITWE</td>
                 </tr>
                 <tr>
-                    <th>DATE ENGAGED:</th>
-                    <td>{{ \Carbon\Carbon::parse($employee->date_of_joining)->format('Y-m-d') }}</td>
-                    <th>PLANT SITE:</th>
-                    <td>SALAMANO</td>
-                    <td></td>
-                    <td></td>
+                    <td><strong>DATE ENGAGED:</strong> {{ $employee->date_of_joining ? \Carbon\Carbon::parse($employee->date_of_joining)->format('Y-m-d') : '-' }}</td>
+                    <td><strong>PLANT SITE:</strong> SALAMANO</td>
+                    <td><strong>ACCOUNT NO:</strong> {{ $employee->bank_account_number ?? '-' }}</td>
                 </tr>
                 <tr>
-                    <th>ACCOUNT NO:</th>
-                    <td>{{ $employee->bank_account_number }}</td>
-                    <th>TERM DATE:</th>
-                    <td>{{ $employee->term_date ?? '-' }}</td>
+                    <td><strong>TERM DATE:</strong> {{ $employee->term_date ? \Carbon\Carbon::parse($employee->term_date)->format('Y-m-d') : '-' }}</td>
                     <td></td>
                     <td></td>
                 </tr>
             </table>
-
             <table>
                 <thead>
                     <tr class="header-row">

@@ -170,12 +170,12 @@ class EquipmentController extends Controller {
         try {
             $equipment->load([
                 'trips' => function ($query) {
-                    $query->orderBy('departure_date', 'asc');
+                    $query->orderBy('departure_date', 'desc');
                 },
                 'trips.driver',
                 'trips.fuels',
                 'machineryUsages' => function ($query) {
-                    $query->orderBy('date', 'asc');
+                    $query->orderBy('date', 'desc');
                 },
                 'machineryUsages.operator',
                 'machineryUsages.fuels',
@@ -543,7 +543,19 @@ class EquipmentController extends Controller {
             if ($usage->equipment->type !== 'Machinery') {
                 return redirect()->back()->with('error', 'Editing only available for Machinery usage.');
             }
-            $operators = Employee::orderBy('first_name')->get(['id', 'employee_full_name', 'designation']);
+            $operators = Employee::whereIn('designation', [
+                    'DRIVER',
+                    'OPERATOR_LOADER',
+                    'DRIVER _ HILUX',
+                    'DRIVER_TIPPER',
+                    'OPERATOR_EXCAVATOR',
+                    'DRIVER_WATERBOWSER',
+                    'OPERATOR_ROLLER',
+                    'LOADER _ OPERATOR',
+                    'DRIVER _ CONTAINER'
+                ])
+                ->orderBy('first_name')
+                ->get(['id', 'employee_full_name', 'designation']);
             return view('machinery_usages.edit', compact('usage', 'operators'));
         } catch (\Exception $e) {
             \Log::error('Error fetching machinery usage: ' . $e->getMessage());
@@ -562,7 +574,7 @@ class EquipmentController extends Controller {
                 'date' => 'required|date',
                 'operator_id' => 'nullable|exists:employees,id',
                 'start_hours' => 'nullable|numeric|min:0',
-                'closing_hours' => 'nullable|numeric|min:0|gte:start_hours',
+                'closing_hours' => 'nullable|numeric', //later update |min:0|gte:start_hours
                 'location' => 'nullable|string|max:255',
                 'fuels.*.litres_added' => 'required|numeric|min:0',
                 'fuels.*.cost' => 'nullable|numeric|min:0',
@@ -753,24 +765,24 @@ class EquipmentController extends Controller {
 
                 if ($dataType === 'machinery') {
                     $date = $item->date ? Carbon::parse($item->date)->format('Y/m/d') : '-';
-                    $hoursUsed = ($item->closing_hours && $item->start_hours) ? ($item->closing_hours - $item->start_hours) : 0;
+                    $hoursUsed = ($item->closing_hours && $item->start_hours && $item->closing_hours > $item->start_hours) ? ($item->closing_hours - $item->start_hours) : 0;
 
                     $sheet->setCellValue('A' . $row, $row - 2)
                         ->setCellValue('B' . $row, $date)
                         ->setCellValue('C' . $row, ($item->start_hours === null || $item->start_hours == 0) ? '-' : $item->start_hours)
                         ->setCellValue('D' . $row, ($item->closing_hours === null || $item->closing_hours == 0) ? '-' : $item->closing_hours)
-                        ->setCellValue('E' . $row, ($hoursUsed === null || $hoursUsed == 0) ? '-' : $hoursUsed)
+                        ->setCellValue('E' . $row, ($hoursUsed === null || $hoursUsed <= 0) ? '-' : $hoursUsed)
                         ->setCellValue('F' . $row, $item->location)
                         ->setCellValue('G' . $row, $item->operator->employee_full_name ?? '-')
                         ->setCellValue('H' . $row, $fuelLogs ?: 'No fuel data')
                         ->setCellValue('I' . $row, number_format($item->fuels->sum('litres_added'), 2))
-                        ->setCellValue('J' . $row, $itemFuelCost > 0 ? number_format($itemFuelCost, 2) : '-');
+                        ->setCellValue('J' . $row, $itemFuelCost > 0 ? $itemFuelCost : '-');
 
                     $totalDistanceOrHours += $hoursUsed;
                 } else {
                     $departureDate = $item->departure_date ? Carbon::parse($item->departure_date)->format('Y/m/d') : '-';
                     $returnDate = $item->return_date ? Carbon::parse($item->return_date)->format('Y/m/d') : '-';
-                    $distanceTravelled = ($item->end_kilometers > 0 && $item->start_kilometers > 0) ? ($item->end_kilometers - $item->start_kilometers) : 0;
+                    $distanceTravelled = ($item->end_kilometers > 0 && $item->start_kilometers > 0 && $item->end_kilometers > $item->start_kilometers) ? ($item->end_kilometers - $item->start_kilometers) : 0;
 
                     $sheet->setCellValue('A' . $row, $row - 2)
                         ->setCellValue('B' . $row, $departureDate)
@@ -792,7 +804,7 @@ class EquipmentController extends Controller {
                         ->setCellValue('R' . $row, $item->other_expenses ? number_format($item->other_expenses, 2) : '-')
                         ->setCellValue('S' . $row, $fuelLogs ?: 'No fuel data')
                         ->setCellValue('T' . $row, number_format($item->fuels->sum('litres_added'), 2))
-                        ->setCellValue('U' . $row, $itemFuelCost > 0 ? number_format($itemFuelCost, 2) : '-');
+                        ->setCellValue('U' . $row, $itemFuelCost > 0 ? $itemFuelCost : '-');
 
                     $totalDistanceOrHours += $distanceTravelled;
                     $totalLoadingCost += $item->loading ?? 0;
@@ -809,42 +821,65 @@ class EquipmentController extends Controller {
 
             // Add associated costs section
             $row++;
-            $sheet->setCellValue('A' . $row, 'Associated Costs');
-            $sheet->mergeCells('A' . $row . ':' . ($dataType === 'machinery' ? 'K' : 'V') . $row);
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+            $sheet->setCellValue('A' . $row, 'Insurances');
+            $sheet->mergeCells('A' . $row . ':D' . $row);
+            $sheet->setCellValue('F' . $row, 'Taxes');
+            $sheet->mergeCells('F' . $row . ':I' . $row);
+            // $sheet->setCellValue($dataType === 'machinery' ? 'I' : 'K', $row, 'Spares');
+            $sheet->setCellValue(($dataType === 'machinery' ? 'I' : 'K') . $row, 'Spares');
+            $sheet->mergeCells($dataType === 'machinery' ? 'I' . $row . ':K' . $row : 'K' . $row . ':M' . $row);
+            $sheet->getStyle('A' . $row . ':' . ($dataType === 'machinery' ? 'K' : 'M') . $row)->getFont()->setBold(true)->setSize(12);
+            $sheet->getStyle('A' . $row . ':' . ($dataType === 'machinery' ? 'K' : 'M') . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
             $row++;
             $sheet->setCellValue('A' . $row, 'Type')
                 ->setCellValue('B' . $row, 'Details')
                 ->setCellValue('C' . $row, 'Amount (ZMW)')
-                ->setCellValue('D' . $row, 'Expiry Date');
-            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray($headerStyle);
+                ->setCellValue('D' . $row, 'Expiry Date')
+                ->setCellValue('F' . $row, 'Type')
+                ->setCellValue('G' . $row, 'Details')
+                ->setCellValue('H' . $row, 'Amount (ZMW)')
+                ->setCellValue('I' . $row, 'Expiry Date')
+                ->setCellValue(($dataType === 'machinery' ? 'I' : 'K') . $row, 'Type')
+                ->setCellValue(($dataType === 'machinery' ? 'J' : 'L') . $row, 'Details')
+                ->setCellValue(($dataType === 'machinery' ? 'K' : 'M') . $row, 'Amount (ZMW)');
+            $sheet->getStyle('A' . $row . ':' . ($dataType === 'machinery' ? 'K' : 'M') . $row)->applyFromArray($headerStyle);
 
-            $row++;
+            $insuranceRow = $row + 1;
             foreach ($equipment->equipmentInsurances as $insurance) {
-                $sheet->setCellValue('A' . $row, 'Insurance')
-                    ->setCellValue('B' . $row, $insurance->insurance_company)
-                    ->setCellValue('C' . $row, ($insurance->premium > 0) ? number_format($insurance->premium, 2) : '-')
-                    ->setCellValue('D' . $row, $insurance->expiry_date->format('Y/m/d'));
-                $row++;
+                $sheet->setCellValue('A' . $insuranceRow, 'Insurance')
+                    ->setCellValue('B' . $insuranceRow, $insurance->insurance_company)
+                    ->setCellValue('C' . $insuranceRow, $insurance->premium > 0 ? $insurance->premium : '-')
+                    ->setCellValue('D' . $insuranceRow, $insurance->expiry_date->format('Y/m/d'));
+                $sheet->getStyle('C' . $insuranceRow)->getNumberFormat()->setFormatCode('0.00');
+                $insuranceRow++;
             }
 
+            $taxRow = $row + 1;
             foreach ($equipment->equipmentTaxes as $tax) {
-                $sheet->setCellValue('A' . $row, 'Tax')
-                    ->setCellValue('B' . $row, $tax->name)
-                    ->setCellValue('C' . $row, ($tax->cost > 0) ? number_format($tax->cost, 2) : '-')
-                    ->setCellValue('D' . $row, $tax->expiry_date->format('Y/m/d'));
-                $row++;
+                $sheet->setCellValue('F' . $taxRow, 'Tax')
+                    ->setCellValue('G' . $taxRow, $tax->name)
+                    ->setCellValue('H' . $taxRow, $tax->cost > 0 ? $tax->cost : '-')
+                    ->setCellValue('I' . $taxRow, $tax->expiry_date->format('Y/m/d'));
+                $sheet->getStyle('H' . $taxRow)->getNumberFormat()->setFormatCode('0.00');
+                $taxRow++;
             }
 
+            $spareStartCol = $dataType === 'machinery' ? 'I' : 'K';
+            $spareDetailsCol = $dataType === 'machinery' ? 'J' : 'L';
+            $spareAmountCol = $dataType === 'machinery' ? 'K' : 'M';
+            $spareRow = $row + 1;
             foreach ($equipment->spares as $spare) {
-                $sheet->setCellValue('A' . $row, 'Spares')
-                    ->setCellValue('B' . $row, $spare->name)
-                    ->setCellValue('C' . $row, ($spare->price > 0) ? number_format($spare->price, 2) : '-')
-                    ->setCellValue('D' . $row, '-');
-                $row++;
+                $sheet->setCellValue($spareStartCol . $spareRow, 'Spares')
+                    ->setCellValue($spareDetailsCol . $spareRow, $spare->name)
+                    ->setCellValue($spareAmountCol . $spareRow, $spare->price > 0 ? $spare->price : '-');
+                $sheet->getStyle($spareAmountCol . $spareRow)->getNumberFormat()->setFormatCode('0.00');
+                $spareRow++;
             }
+
+            // Align all tables to the same height
+            $maxRow = max($insuranceRow, $taxRow, $spareRow);
+            $row = $maxRow;
 
             // Add summary section
             $row++;

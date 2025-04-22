@@ -163,7 +163,7 @@
                                                 <td>{{ $usage->start_hours !== null && $usage->start_hours > 0 ? number_format($usage->start_hours, 2) : '-' }}</td>
                                                 <td>{{ $usage->closing_hours !== null && $usage->closing_hours > 0 ? number_format($usage->closing_hours, 2) : '-' }}</td>
                                                 <td>
-                                                    @if ($usage->closing_hours !== null && $usage->start_hours !== null && $usage->closing_hours > 0 && $usage->start_hours >= 0)
+                                                    @if ($usage->closing_hours !== null && $usage->start_hours !== null && $usage->closing_hours > 0 && $usage->start_hours > 0 && $usage->closing_hours > $usage->start_hours)
                                                         {{ number_format($usage->closing_hours - $usage->start_hours, 2) }} hrs
                                                     @else
                                                         -
@@ -246,7 +246,7 @@
                                                 <td>{{ $trip->start_kilometers !== null && $trip->start_kilometers > 0 ? number_format($trip->start_kilometers, 2) : '-' }}</td>
                                                 <td>{{ $trip->end_kilometers !== null && $trip->end_kilometers > 0 ? number_format($trip->end_kilometers, 2) : '-' }}</td>
                                                 <td>
-                                                    @if ($trip->end_kilometers !== null && $trip->start_kilometers !== null && $trip->end_kilometers > 0 && $trip->start_kilometers > 0)
+                                                    @if ($trip->end_kilometers !== null && $trip->start_kilometers !== null && $trip->end_kilometers > 0 && $trip->start_kilometers > 0 && $trip->end_kilometers > $trip->start_kilometers)
                                                         {{ number_format($trip->end_kilometers - $trip->start_kilometers, 2) }} km
                                                     @else
                                                         -
