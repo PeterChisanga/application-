@@ -88,7 +88,9 @@
 
             .header-row th {
                 border-bottom: 2px solid #000;
+                text-align: right;
             }
+
         </style>
     </head>
     <body>
@@ -157,19 +159,10 @@
                     <tr>
                         <td>Leave Days</td>
                         <td>{{ number_format($payslipData['leave_days']) }}</td>
-                        <td></td>
+                        <td>{{ number_format($payslipData['leave_value']) ?? '-' }}</td>
                         <td></td>
                         <td>NAPSA</td>
                         <td>{{ number_format($payslipData['napsa'], 2) }}</td>
-                    </tr>
-                    <!-- Third row -->
-                    <tr>
-                        <td>Leave Value</td>
-                        <td>{{ number_format($payslipData['leave_value']) ?? '-' }}</td>
-                        <td></td>
-                        <td></td>
-                        <td>NHIMA</td>
-                        <td>{{ number_format($payslipData['nhima'], 2) }}</td>
                     </tr>
                     <!-- Fourth row -->
                     <tr>
@@ -177,8 +170,8 @@
                         <td></td>
                         <td>{{ number_format($payslipData['housing_allowance'], 2) }}</td>
                         <td></td>
-                        <td>ADVANCE</td>
-                        <td>{{ number_format($payslipData['advance'], 2) }}</td>
+                        <td>NHIMA</td>
+                        <td>{{ number_format($payslipData['nhima'], 2) }}</td>
                     </tr>
                     <!-- Fifth row -->
                     <tr>
@@ -186,17 +179,33 @@
                         <td>{{ number_format($payslipData['overtime_hours'], 2) }}</td>
                         <td>{{ number_format($payslipData['overtime_pay'], 2) }}</td>
                         <td></td>
+                        <td>ADVANCE</td>
+                        <td>{{ number_format($payslipData['advance'], 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Sunday / PH</td>
+                        <td>{{ number_format($payslipData['sundays_worked'], 2) }}</td>
+                        <td>{{ number_format($payslipData['sundays_pay'], 2) }}</td>
+                        <td></td>
                         <td>UMUZ FEE</td>
                         <td>{{ number_format($payslipData['umuz_fee'], 2) }}</td>
                     </tr>
                     <!-- Sixth row -->
                     <tr>
+                        <td>Forced Leave</td>
+                        <td></td>
+                        <td>{{ number_format($payslipData['forced_leave'], 2) }}</td>
+                        <td></td>
+                        <td>DOUBLE DEDUCTED</td>
+                        <td>{{ number_format($payslipData['double_deducted'], 2) }}</td>
+                    </tr>
+                    <tr>
                         <td>Transport</td>
                         <td></td>
                         <td>{{ number_format($payslipData['transport_allowance'], 2) }}</td>
                         <td></td>
-                        <td>DOUBLE DEDUCTED</td>
-                        <td>{{ number_format($payslipData['double_deducted'], 2) }}</td>
+                        <td></td>
+                        <td></td>
                     </tr>
                     <!-- Seventh row -->
                     <tr>

@@ -285,6 +285,18 @@
                                     <input type="number" step="1" class="form-control" id="overtime_pay" name="overtime_pay" required>
                                 </div>
                                 <div class="mb-2">
+                                    <label for="sundays_worked" class="form-label">Sundays Worked</label>
+                                    <input type="number" step="1" class="form-control" id="sundays_worked" name="sundays_worked" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="sundays_pay" class="form-label">Sundays Pay (ZMW)</label>
+                                    <input type="number" step="1" class="form-control" id="sundays_pay" name="sundays_pay" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="forced_leave" class="form-label">Forced Leave (ZMW)</label>
+                                    <input type="number" step="1" class="form-control" id="forced_leave" name="forced_leave" required>
+                                </div>
+                                <div class="mb-2">
                                     <label for="transport_allowance" class="form-label">Transport Allowance (ZMW)</label>
                                     <input type="number" step="1" class="form-control" id="transport_allowance" name="transport_allowance" required>
                                 </div>
@@ -373,7 +385,7 @@
 </div>
 
 <!-- JavaScript for Modal -->
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
         const payslipModal = document.getElementById('payslipModal');
         payslipModal.addEventListener('show.bs.modal', function (event) {
@@ -393,10 +405,12 @@
                 document.getElementById('basic_salary').value = data.basic_salary;
                 document.getElementById('days_worked').value = data.days_worked;
                 document.getElementById('leave_days').value = data.leave_days;
-                document.getElementById('leave_value').value = data.leave_value || '';
+                document.getElementById('leave_value').value = data.leave_value || 0;
                 document.getElementById('housing_allowance').value = data.housing_allowance;
                 document.getElementById('overtime_hours').value = data.overtime_hours;
                 document.getElementById('overtime_pay').value = data.overtime_pay;
+                document.getElementById('sundays_worked').value = data.sundays_worked;
+                document.getElementById('sundays_pay').value = data.sundays_pay;
                 document.getElementById('transport_allowance').value = data.transport_allowance;
                 document.getElementById('lunch_allowance').value = data.lunch_allowance;
                 document.getElementById('other_allowances').value = data.other_allowances || '';
@@ -407,6 +421,7 @@
                 document.getElementById('advance').value = data.advance;
                 document.getElementById('umuz_fee').value = data.umuz_fee;
                 document.getElementById('double_deducted').value = data.double_deducted;
+                document.getElementById('forced_leave').value = data.forced_leave;
                 document.getElementById('total_deductions').value = data.total_deductions;
                 document.getElementById('net_pay').value = data.net_pay;
                 document.getElementById('tax_paid_ytd').value = data.tax_paid_ytd;
@@ -456,7 +471,159 @@
             });
         });
     });
+</script> --}}
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const payslipModal = document.getElementById('payslipModal');
+        const form = document.getElementById('payslipForm');
+
+        // Function to calculate payslip values
+        function calculatePayslip() {
+            const basicSalary = parseFloat(document.getElementById('basic_salary').value) || 0;
+            const sundaysWorked = parseFloat(document.getElementById('sundays_worked').value) || 0;
+            const overtimeHours = parseFloat(document.getElementById('overtime_hours').value) || 0;
+            const housingAllowance = basicSalary * 0.3; // 30% of basic salary
+            const sundaysPay = (basicSalary / 26) * sundaysWorked * 2; // Double daily rate per Sunday
+            const overtimePay = ((basicSalary / 26) / 8) * overtimeHours * 1.5; // 1.5x hourly rate per overtime hour
+            const transportAllowance = parseFloat(document.getElementById('transport_allowance').value) || 0;
+            const lunchAllowance = parseFloat(document.getElementById('lunch_allowance').value) || 0;
+            const otherAllowances = parseFloat(document.getElementById('other_allowances').value) || 0;
+            const forcedLeave = parseFloat(document.getElementById('forced_leave').value) || 0;
+
+            const totalEarnings = basicSalary + housingAllowance + transportAllowance + lunchAllowance +
+                otherAllowances + overtimePay + sundaysPay + forcedLeave;
+
+            const napsa = totalEarnings * 0.05;
+            const nhima = basicSalary * 0.01;
+
+            let taxRate = 0;
+            if (totalEarnings > 9200) {
+                taxRate = (5100 * 0) + (2000 * 0.2) + (2100 * 0.3) + ((totalEarnings - 9200) * 0.37);
+            } else if (totalEarnings > 7100) {
+                taxRate = (5100 * 0) + (2000 * 0.2) + ((totalEarnings - 7100) * 0.3);
+            } else if (totalEarnings > 5100) {
+                taxRate = (5100 * 0) + ((totalEarnings - 5100) * 0.2);
+            }
+
+            const advance = parseFloat(document.getElementById('advance').value) || 0;
+            const umuzFee = parseFloat(document.getElementById('umuz_fee').value) || 0;
+            const doubleDeducted = parseFloat(document.getElementById('double_deducted').value) || 0;
+
+            const totalDeductions = taxRate + napsa + nhima + advance + umuzFee + doubleDeducted;
+            const netPay = totalEarnings - totalDeductions;
+
+            document.getElementById('housing_allowance').value = housingAllowance.toFixed(2);
+            document.getElementById('sundays_pay').value = sundaysPay.toFixed(2);
+            document.getElementById('overtime_pay').value = overtimePay.toFixed(2);
+            document.getElementById('total_earnings').value = totalEarnings.toFixed(2);
+            document.getElementById('napsa').value = napsa.toFixed(2);
+            document.getElementById('nhima').value = nhima.toFixed(2);
+            document.getElementById('tax_rate').value = taxRate.toFixed(2);
+            document.getElementById('total_deductions').value = totalDeductions.toFixed(2);
+            document.getElementById('net_pay').value = netPay.toFixed(2);
+        }
+
+        // Add event listeners
+        const inputFields = [
+            'basic_salary', 'sundays_worked', 'overtime_hours', 'transport_allowance',
+            'lunch_allowance', 'other_allowances', 'forced_leave', 'advance',
+            'umuz_fee', 'double_deducted'
+        ];
+        inputFields.forEach(id => {
+            document.getElementById(id).addEventListener('input', calculatePayslip);
+        });
+
+        // Fetch initial payslip data
+        payslipModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const employeeId = button.getAttribute('data-employee-id');
+            const url = '{{ route("employees.generatePayslip", ":id") }}'.replace(':id', employeeId);
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('basic_salary').value = data.basic_salary || 0.0;
+                document.getElementById('housing_allowance').value = data.housing_allowance || 0.0;
+                document.getElementById('days_worked').value = data.days_worked || 0.0;
+                document.getElementById('leave_days').value = data.leave_days || 0.0;
+                document.getElementById('leave_value').value = data.leave_value || 0.0;
+                document.getElementById('overtime_hours').value = data.overtime_hours || 0.0;
+                document.getElementById('overtime_pay').value = data.overtime_pay || 0.0;
+                document.getElementById('sundays_worked').value = data.sundays_worked || 0.0;
+                document.getElementById('sundays_pay').value = data.sundays_pay || 0.0;
+                document.getElementById('forced_leave').value = data.forced_leave || 0.0;
+                document.getElementById('transport_allowance').value = data.transport_allowance || 0.0;
+                document.getElementById('lunch_allowance').value = data.lunch_allowance || 0.0;
+                document.getElementById('other_allowances').value = data.other_allowances || 0.0;
+                document.getElementById('total_earnings').value = data.total_earnings || 0.0;
+                document.getElementById('tax_rate').value = data.tax_rate || 0.0;
+                document.getElementById('napsa').value = data.napsa || 0.0;
+                document.getElementById('nhima').value = data.nhima || 0.0;
+                document.getElementById('advance').value = data.advance || 0.0;
+                document.getElementById('umuz_fee').value = data.umuz_fee || 0.0;
+                document.getElementById('double_deducted').value = data.double_deducted || 0.0;
+                document.getElementById('total_deductions').value = data.total_deductions || 0.0;
+                document.getElementById('net_pay').value = data.net_pay || 0.0;
+                document.getElementById('tax_paid_ytd').value = data.tax_paid_ytd || 0.0;
+                document.getElementById('taxable_earnings_ytd').value = data.taxable_earnings_ytd || 0.0;
+                document.getElementById('annual_leave_due').value = data.annual_leave_due || 0.0;
+                document.getElementById('leave_value_ytd').value = data.leave_value_ytd || 0.0;
+                document.getElementById('pay_period').value = data.pay_period || '';
+
+                calculatePayslip();
+            })
+            .catch(error => {
+                console.error('Error fetching payslip data:', error);
+                alert('Failed to load payslip data.');
+            });
+        });
+
+        // Handle payslip generation
+        document.getElementById('confirmPayslip').addEventListener('click', function () {
+            const formData = new FormData(form);
+            const employeeId = this.getAttribute('data-employee-id');
+            const url = '{{ route("employees.generatePayslip", ":id") }}'.replace(':id', employeeId);
+            const employeeName = '{{ $employee->employee_full_name }}';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/pdf'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to generate PDF');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${employeeName}_payslip.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error generating PDF:', error);
+                alert('Failed to generate payslip PDF.');
+            });
+        });
+    });
 </script>
+
 @endsection
 
 
