@@ -485,6 +485,7 @@
             const basicSalary = parseFloat(document.getElementById('basic_salary').value) || 0;
             const sundaysWorked = parseFloat(document.getElementById('sundays_worked').value) || 0;
             const overtimeHours = parseFloat(document.getElementById('overtime_hours').value) || 0;
+            const annualLeaveDue = parseFloat(document.getElementById('annual_leave_due').value) || 0;
             const housingAllowance = basicSalary * 0.3; // 30% of basic salary
             const sundaysPay = (basicSalary / 26) * sundaysWorked * 2; // Double daily rate per Sunday
             const overtimePay = ((basicSalary / 26) / 8) * overtimeHours * 1.5; // 1.5x hourly rate per overtime hour
@@ -492,6 +493,8 @@
             const lunchAllowance = parseFloat(document.getElementById('lunch_allowance').value) || 0;
             const otherAllowances = parseFloat(document.getElementById('other_allowances').value) || 0;
             const forcedLeave = parseFloat(document.getElementById('forced_leave').value) || 0;
+
+            const leaveValueYtd = (basicSalary + housingAllowance + transportAllowance + lunchAllowance + otherAllowances) / 26 * annualLeaveDue;
 
             const totalEarnings = basicSalary + housingAllowance + transportAllowance + lunchAllowance +
                 otherAllowances + overtimePay + sundaysPay + forcedLeave;
@@ -518,6 +521,7 @@
             document.getElementById('housing_allowance').value = housingAllowance.toFixed(2);
             document.getElementById('sundays_pay').value = sundaysPay.toFixed(2);
             document.getElementById('overtime_pay').value = overtimePay.toFixed(2);
+            document.getElementById('leave_value_ytd').value = leaveValueYtd.toFixed(2);
             document.getElementById('total_earnings').value = totalEarnings.toFixed(2);
             document.getElementById('napsa').value = napsa.toFixed(2);
             document.getElementById('nhima').value = nhima.toFixed(2);
@@ -526,11 +530,11 @@
             document.getElementById('net_pay').value = netPay.toFixed(2);
         }
 
-        // Add event listeners
+        // event listeners
         const inputFields = [
             'basic_salary', 'sundays_worked', 'overtime_hours', 'transport_allowance',
             'lunch_allowance', 'other_allowances', 'forced_leave', 'advance',
-            'umuz_fee', 'double_deducted'
+            'umuz_fee', 'double_deducted', 'annual_leave_due'
         ];
         inputFields.forEach(id => {
             document.getElementById(id).addEventListener('input', calculatePayslip);
@@ -615,6 +619,7 @@
                 a.click();
                 a.remove();
                 window.URL.revokeObjectURL(url);
+                // bootstrap.Modal.getInstance(payslipModal).hide();ab
             })
             .catch(error => {
                 console.error('Error generating PDF:', error);
@@ -623,7 +628,6 @@
         });
     });
 </script>
-
 @endsection
 
 

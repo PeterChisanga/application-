@@ -88,9 +88,13 @@
 
             .header-row th {
                 border-bottom: 2px solid #000;
-                text-align: right;
             }
 
+            .net-pay th {
+                border-bottom: 2px solid #000;
+                text-align: right;
+                font-size: 15px;
+            }
         </style>
     </head>
     <body>
@@ -146,7 +150,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- First row -->
                     <tr>
                         <td>Basic Pay</td>
                         <td>{{ number_format($payslipData['days_worked'], 2) }}</td>
@@ -155,7 +158,6 @@
                         <td>TAX RATE</td>
                         <td>{{ number_format($payslipData['tax_rate'], 2) }}</td>
                     </tr>
-                    <!-- Second row -->
                     <tr>
                         <td>Leave Days</td>
                         <td>{{ number_format($payslipData['leave_days']) }}</td>
@@ -164,7 +166,6 @@
                         <td>NAPSA</td>
                         <td>{{ number_format($payslipData['napsa'], 2) }}</td>
                     </tr>
-                    <!-- Fourth row -->
                     <tr>
                         <td>Housing Allowance</td>
                         <td></td>
@@ -173,7 +174,6 @@
                         <td>NHIMA</td>
                         <td>{{ number_format($payslipData['nhima'], 2) }}</td>
                     </tr>
-                    <!-- Fifth row -->
                     <tr>
                         <td>Overtime</td>
                         <td>{{ number_format($payslipData['overtime_hours'], 2) }}</td>
@@ -190,7 +190,6 @@
                         <td>UMUZ FEE</td>
                         <td>{{ number_format($payslipData['umuz_fee'], 2) }}</td>
                     </tr>
-                    <!-- Sixth row -->
                     <tr>
                         <td>Forced Leave</td>
                         <td></td>
@@ -207,7 +206,6 @@
                         <td></td>
                         <td></td>
                     </tr>
-                    <!-- Seventh row -->
                     <tr>
                         <td>Lunch</td>
                         <td></td>
@@ -216,7 +214,6 @@
                         <td></td>
                         <td></td>
                     </tr>
-                    <!-- Totals row -->
                     <tr class="header-row">
                         <th colspan="2">Total Earnings</th>
                         <th>{{ number_format($payslipData['total_earnings'], 2) }}</th>
@@ -229,9 +226,8 @@
 
             <table>
                 <tbody>
-                    <tr class="header-row">
-                        <th>Net Pay:</th>
-                        <th>{{ number_format($payslipData['net_pay'], 2) }} ZMW</th>
+                    <tr class="net-pay">
+                        <th><span>Net Pay: </span>{{ number_format($payslipData['net_pay'], 2) }} ZMW</th>
                     </tr>
                 </tbody>
             </table>
@@ -248,19 +244,19 @@
                 <tbody>
                     <tr>
                         <th>Tax Paid</th>
-                        <th>{{ number_format($payslipData['tax_paid_ytd'], 2) }}</th>
+                        <th>{{ $payslipData['tax_paid_ytd'] > 0 ? number_format($payslipData['tax_paid_ytd'], 2) : '-'  }}</th>
                     </tr>
                     <tr>
                         <th>Taxable Earnings</th>
-                        <th>{{ number_format($payslipData['taxable_earnings_ytd'], 2) }}</th>
+                        <th>{{ $payslipData['taxable_earnings_ytd'] > 0 ? number_format($payslipData['taxable_earnings_ytd'], 2) : '-' }}</th>
                     </tr>
                     <tr>
                         <th>Annual Leave Due</th>
-                        <th>{{ number_format($payslipData['annual_leave_due'], 2) }}</th>
+                        <th>{{ $payslipData['annual_leave_due'] > 0 ? number_format($payslipData['annual_leave_due'], 2) : '-' }}</th>
                     </tr>
                     <tr>
                         <th>Leave Value</th>
-                        <th>{{ number_format($payslipData['leave_value_ytd'], 2) }}</th>
+                        <th>{{ $payslipData['leave_value_ytd'] > 0 ? number_format($payslipData['leave_value_ytd'], 2) : '-' }}</th>
                     </tr>
                 </tbody>
             </table>
