@@ -39,6 +39,9 @@
         <a href="{{ route('equipments.create') }}" class="btn" style="background-color:#510404; margin-left:6px; color: #fff;">
             <i class="fas fa-truck"></i> Register Equipment
         </a>
+        <button type="button" class="btn btn-success ml-2" data-bs-toggle="modal" data-bs-target="#reportAllModal">
+            <i class="fas fa-file-alt"></i> Generate Report for all Equipment
+        </button>
         {{-- <a href="{{ route('equipments.upload') }}" class="btn btn-success"> <i class="fas fa-upload"></i> Add Equipments With An Excel Sheet</a> --}}
         {{-- <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reportModal">
             <i class="fas fa-file-alt"></i> Generate Report For All Vehicles
@@ -625,6 +628,56 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" id="btn_close_machinery" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
                             <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save Machinery Usage & Fuel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipment Report Modal -->
+    <div class="modal fade" id="reportAllModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel">Generate Report for all Equipment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reportForm" action="{{ route('reports.all_equipment') }}" method="POST">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date" name="start_date" value="{{ old('start_date') }}" >
+                            @error('start_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('end_date') is-invalid @enderror" id="end_date" name="end_date" value="{{ old('end_date') }}" >
+                            @error('end_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="format" class="form-label">Report Format <span class="text-danger">*</span></label>
+                            <select class="form-control @error('format') is-invalid @enderror" id="format" name="format" required>
+                                <option value="">Select Format</option>
+                                <option value="csv" {{ old('format') == 'csv' ? 'selected' : '' }}>Excel (CSV)</option>
+                                <option value="pdf" {{ old('format') == 'pdf' ? 'selected' : '' }}>PDF</option> 
+                            </select>
+                            @error('format')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-download"></i> Generate Report</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
                         </div>
                     </form>
                 </div>

@@ -25,22 +25,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Carbon\Carbon;
 
-
 class EquipmentController extends Controller {
-
-    // public function index() {
-    //     try {
-    //         $equipments = Equipment::with(['trips', 'machineryUsages'])
-    //             ->orderBy('registration_number', 'asc') // Sort by equipment_name alphabetically
-    //             ->get();
-
-    //         return view('equipments.index', compact('equipments'));
-    //     } catch (Exception $e) {
-    //         \Log::error('Error fetching equipment: ' . $e->getMessage());
-    //         return redirect()->back()->with('error', 'Failed to fetch equipment.');
-    //     }
-    // }
-
     public function index() {
         try {
             $equipments = Equipment::with(['trips', 'machineryUsages', 'equipmentInsurances', 'equipmentTaxes'])
@@ -958,6 +943,174 @@ class EquipmentController extends Controller {
 
             // Save the file
             $filename = "equipment_report_{$equipment->registration_number}_{$equipment->name}_{$startDate}_to_{$endDate}.xlsx";
+            $filePath = storage_path("app/public/{$filename}");
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            return response()->download($filePath, $filename)->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            \Log::error('Excel Generation Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate Excel file: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function generateAllEquipmentReport(Request $request) {
+        $request->validate([
+            'start_date' => 'required|date|before_or_equal:end_date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'format' => 'required|in:csv,pdf',
+        ]);
+
+        try {
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+            $format = $request->format;
+
+            // Fetch all equipment with related trips and machinery usages
+            $equipments = Equipment::with([
+                'trips' => fn($query) => $query->whereBetween('departure_date', [$startDate, $endDate])->with('fuels'),
+                'machineryUsages' => fn($query) => $query->whereBetween('date', [$startDate, $endDate])->with('fuels'),
+            ])->get();
+
+            if ($equipments->isEmpty()) {
+                return back()->with('error', 'No equipment found in the system.');
+            }
+
+            // Aggregate data for each equipment
+            $reportData = $equipments->map(function ($equipment) use ($startDate, $endDate) {
+                $isMachinery = $equipment->type === 'Machinery';
+                $dataType = $isMachinery ? 'machinery' : 'trips';
+                $data = $isMachinery ? $equipment->machineryUsages : $equipment->trips;
+
+                $totalDistanceOrHours = $isMachinery
+                    ? $data->sum(fn($usage) => ($usage->closing_hours && $usage->start_hours && $usage->closing_hours > $usage->start_hours) ? ($usage->closing_hours - $usage->start_hours) : 0)
+                    : $data->sum(fn($trip) => ($trip->end_kilometers > 0 && $trip->start_kilometers > 0 && $trip->end_kilometers > $trip->start_kilometers) ? ($trip->end_kilometers - $trip->start_kilometers) : 0);
+
+                $totalFuelUsed = $data->sum(fn($item) => $item->fuels->sum('litres_added'));
+                $totalFuelCost = $data->sum(fn($item) => $item->fuels->sum(fn($fuel) => $fuel->cost !== null ? $fuel->litres_added * $fuel->cost : 0));
+                $totalMaterialDelivered = $isMachinery ? 0 : $data->sum('net_weight');
+
+                return [
+                    'registration_number' => $equipment->registration_number,
+                    'equipment_name' => $equipment->equipment_name,
+                    'equipment_type' => $equipment->type,
+                    'total_distance_or_hours' => $totalDistanceOrHours,
+                    'total_fuel_used' => $totalFuelUsed,
+                    'total_material_delivered' => $totalMaterialDelivered,
+                    'total_fuel_cost' => $totalFuelCost,
+                    'is_machinery' => $isMachinery,
+                ];
+            });
+
+            // Filter out equipment with no data
+            $reportData = $reportData->filter(fn($item) => $item['total_distance_or_hours'] > 0 || $item['total_fuel_used'] > 0 || $item['total_material_delivered'] > 0);
+
+            if ($reportData->isEmpty()) {
+                return back()->with('error', 'No trips or machinery usage data found for any equipment in the selected date range.');
+            }
+
+            // Sort reportData: HMVs, LMVs, Machinery
+            $reportData = $reportData->sortBy(function ($item) {
+                return match ($item['equipment_type']) {
+                    'HMV' => 0, // HMVs first
+                    'LMV' => 1, // LMVs second
+                    'Machinery' => 2, // Machinery last
+                    default => 3, // Fallback for unexpected types
+                };
+            })->values();
+
+            // Calculate summary
+            $summary = [
+                'total_fuel_used' => $reportData->sum('total_fuel_used'),
+                'total_material_delivered' => $reportData->sum('total_material_delivered'),
+                'total_fuel_cost' => $reportData->sum('total_fuel_cost'),
+            ];
+
+            if ($format === 'pdf') {
+                $pdf = Pdf::loadView('reports.all_equipment_pdf', compact('reportData', 'summary', 'startDate', 'endDate'))
+                    ->setPaper('A4', 'landscape');
+                return $pdf->download("all_equipment_report_{$startDate}_to_{$endDate}.pdf");
+            } elseif ($format === 'csv') {
+                return $this->generateAllEquipmentCSV($reportData, $summary, $startDate, $endDate);
+            }
+
+            return back()->with('error', 'Invalid format selected.');
+        } catch (\Exception $e) {
+            \Log::error('Error generating all equipment report: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while generating the report: ' . $e->getMessage());
+        }
+    }
+
+    private function generateAllEquipmentCSV($reportData, $summary, $startDate, $endDate) {
+        try {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Title
+            $sheet->setCellValue('A1', "All Equipment Report - {$startDate} to {$endDate}");
+            $sheet->mergeCells('A1:F1');
+            $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+            // Headers
+            $sheet->setCellValue('A3', 'Registration Number')
+                ->setCellValue('B3', 'Equipment Type')
+                ->setCellValue('C3', 'Total Distance Travelled (Km) / Hours Worked')
+                ->setCellValue('D3', 'Total Material Delivered (Tonnes)')
+                ->setCellValue('E3', 'Total Fuel Used (Litres)')
+                ->setCellValue('F3', 'Total Fuel Cost (ZMW)');
+
+            $headerStyle = [
+                'font' => ['bold' => true],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'D3D3D3']]
+            ];
+            $sheet->getStyle('A3:F3')->applyFromArray($headerStyle);
+
+            // Data rows
+            $row = 4;
+            foreach ($reportData as $item) {
+                $sheet->setCellValue('A' . $row, $item['registration_number'].' '.$item['equipment_name'])
+                    ->setCellValue('B' . $row, $item['equipment_type'])
+                    ->setCellValue('C' . $row, $item['total_distance_or_hours'] > 0 ? $item['total_distance_or_hours'] : '-')
+                    ->setCellValue('D' . $row, $item['is_machinery'] ? '-' : $item['total_material_delivered'])
+                    ->setCellValue('E' . $row, $item['total_fuel_used'])
+                    ->setCellValue('F' . $row, $item['total_fuel_cost'] > 0 ? $item['total_fuel_cost'] : '-');
+                $row++;
+            }
+
+            // Summary
+            $row++;
+            $sheet->setCellValue('A' . $row, 'Summary');
+            $sheet->mergeCells('A' . $row . ':F' . $row);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
+            $row++;
+
+            $sheet->setCellValue('D' . $row, 'Total Material Delivered:');
+            $sheet->setCellValue('E' . $row, number_format($summary['total_material_delivered'], 2) . ' Tonnes');
+            $sheet->getStyle('D' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $row++;
+
+            $sheet->setCellValue('D' . $row, 'Total Fuel Used:');
+            $sheet->setCellValue('E' . $row, number_format($summary['total_fuel_used'], 2) . ' Litres');
+            $sheet->getStyle('D' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            $row++;
+
+            $sheet->setCellValue('D' . $row, 'Total Fuel Cost:');
+            $sheet->setCellValue('E' . $row, number_format($summary['total_fuel_cost'], 2) . ' ZMW');
+            $sheet->getStyle('D' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('E' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+            // Auto-size columns
+            foreach (range('A', 'F') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+
+            // Save file
+            $filename = "all_equipment_report_{$startDate}_to_{$endDate}.xlsx";
             $filePath = storage_path("app/public/{$filename}");
             $writer = new Xlsx($spreadsheet);
             $writer->save($filePath);
