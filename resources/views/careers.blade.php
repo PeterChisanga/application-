@@ -98,7 +98,8 @@
             <tr><td>11</td><td>Safety Officer</td></tr>
             <tr><td>12</td><td>Chemist</td></tr>
             <tr><td>13</td><td>Accounts Assistant</td></tr>
-            <tr><td>14</td><td>Stores Assistant</td></tr>
+            <tr><td>14</td><td>Senior Accountant</td></tr>
+            <tr><td>15</td><td>Stores Assistant</td></tr>
         </tbody>
     </table>
 
