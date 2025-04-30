@@ -71,7 +71,7 @@
 <div class="container careers">
     <h1 class="text-center">Careers</h1>
     <h2>Career Opportunities at Swarna Metals Zambia Limited (Kitwe, Copperbelt)</h2>
-    <h4>Publication Date: 27th February, 2025.</h4>
+    <h4>Publication Date: 27th April, 2025.</h4>
     <p>
         Swarna Metals Zambia Limited, a PLR Projects Group Company, is a new and ambitious hydrometallurgical copper extraction plant based in Kitwe, Zambia. We are actively recruiting skilled and experienced professionals to join our team as we prepare to commence production. If you’re ready to contribute your expertise in copper processing to a fast-growing organization in the heart of the Copperbelt, we want to hear from you!
     </p>
@@ -349,7 +349,29 @@
     </div>
 
     <div>
-        <h3>14. Stores Assistant</h3>
+        <h3>14. Senior Accountant</h3>
+        <p><strong>Job Description:</strong></p>
+        <ul>
+            <li>Manage and oversee all accounting operations independently for large-scale businesses.</li>
+            <li>Maintain accurate financial records using ERP systems and ensure compliance with industry standards.</li>
+            <li>Prepare and analyze financial reports, statements, and forecasts for management review.</li>
+            <li>Ensure adherence to ISO standards and internal control procedures.</li>
+            <li>Collaborate with auditors, tax consultants, and external regulators as required.</li>
+            <li>Adapt quickly to new systems and contribute to continuous process improvements.</li>
+        </ul>
+        <p><strong>Qualifications Required:</strong></p>
+        <ul>
+            <li>Bachelor's degree in Accounting, Finance, CIMA 3, ACCA 3, or a related field.</li>
+            <li>Minimum of 5 years of experience in an accounting or finance role.</li>
+            <li>Proven experience managing accounting functions for large businesses, preferably in the Manufacturing, Infrastructure, or Mining industries.</li>
+            <li>Strong working knowledge of ERP systems and hands-on experience with Microsoft Office (Excel, Word, PowerPoint).</li>
+            <li>Excellent analytical skills, attention to detail, and the ability to meet deadlines independently.</li>
+        </ul>
+        <p>To submit your application, please <a href="{{ route('applications.create') }}">click here</a>.</p>
+    </div>
+
+    <div>
+        <h3>15. Stores Assistant</h3>
         <p><strong>Job Description:</strong></p>
         <ul>
             <li>Oversee and manage warehouse to ensure timely availability of resources while maintaining compliance with inventory control standards.</li>
@@ -390,7 +412,7 @@
         <li>To submit your application, please <a href="{{ route('applications.create') }}">click here</a>.</li>
     </ul>
 
-    <p><strong>Application Deadline:</strong> 17st April 2025</p>
+    <p><strong>Application Deadline:</strong> 17st May 2025</p>
     <p><strong>Why Join Us?</strong> Be part of a dynamic team driving innovation in Zambia’s copper industry. Join us in our journey towards excellence!</p>
 
 </div>

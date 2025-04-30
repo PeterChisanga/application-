@@ -40,11 +40,9 @@
             </div>
 
             <div>
-                <p><strong>Certificates:</strong></p>
+                <p><strong>Certificates:</strong>
                 @forelse ($application->certificates as $certificate)
-                    <p>
-                        <a href="{{ asset('storage/' . $certificate->file_path) }}" target="_blank" class="btn btn-link">View Certificate</a>
-                    </p>
+                        <a href="{{ asset('storage/' . $certificate->file_path) }}" target="_blank" class="btn btn-link">View Certificates</a></p>
                 @empty
                     <p class="text-muted">No certificates uploaded.</p>
                 @endforelse
