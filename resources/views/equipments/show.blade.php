@@ -686,7 +686,7 @@
                     <h5 class="modal-title" id="updateTripModalLabel">Edit Trip Information</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                @if ($equipment->type === 'HMV')
+                @if ($equipment->type === 'HMV' || $equipment->type === 'LMV')
                     @include('equipments.trip-modal')
                 @endif
             </div>
