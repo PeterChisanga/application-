@@ -43,6 +43,7 @@
         }
         .highlight {
             color: red;
+            text-decoration: underline;
             font-weight: bold;
         }
         /* Column widths for balance in landscape */
@@ -59,7 +60,7 @@
     <div class="container">
         <div class="header">
             <h1>Expired or Expiring Equipment Report</h1>
-            <p>As of {{ \Carbon\Carbon::today()->format('Y/m/d') }} (Includes items expiring by {{ \Carbon\Carbon::today()->addMonths(2)->format('Y/m/d') }})</p>
+            <p>As of {{ \Carbon\Carbon::today()->format('Y/m/d') }} (Includes items expiring by {{ \Carbon\Carbon::today()->addMonth()->endOfMonth()->format('Y/m/d') }})</p>
         </div>
 
         <table>
