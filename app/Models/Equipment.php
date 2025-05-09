@@ -53,6 +53,10 @@ class Equipment extends Model {
         return $this->hasMany(EquipmentInsurance::class);
     }
 
+    public function latestInsurance() {
+        return $this->hasOne(EquipmentInsurance::class)->latest('expiry_date');
+    }
+
     public function equipmentTaxes() {
         return $this->hasMany(EquipmentTax::class);
     }

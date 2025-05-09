@@ -5286,3 +5286,98 @@ var tripFuelEntryCount = 1;
 </script>
 
 @endsection
+
+
+-------------------------------------data analysis for the exports-------------------------
+library(rvest)
+library(httr)
+library(dplyr)
+
+# Function to get export data for a commodity
+get_export_data <- function(commodity_code) {
+  url <- paste0("https://trendeconomy.com/data/h2?commodity=", commodity_code,
+                "&reporter=Angola&trade_flow=Export&partner=World&indicator=TV,YoY&time_period=2017")
+
+  # Send request with custom headers using httr
+  response <- tryCatch({
+    GET(url, add_headers(
+      "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    ))
+  }, error = function(e) NULL)
+
+  if (is.null(response) || status_code(response) != 200) {
+    message("❌ Failed to load page for commodity: ", commodity_code)
+    return(data.frame())
+  }
+
+  # Read the HTML content
+  page <- content(response, "text")
+  page <- read_html(page)
+
+  # Try to find the specific export structure
+  data_section <- page %>%
+    html_node("div h3:contains('Exports structure of ') + ul") %>%
+    html_elements("li")
+
+  if (length(data_section) == 0) {
+    message("⚠️ No export data found for commodity: ", commodity_code)
+    return(data.frame())
+  }
+
+  # Process the data
+  data <- data_section %>%
+    html_text(trim = TRUE) %>%
+    data.frame(Commodity_Info = .) %>%
+    filter(Commodity_Info != "") %>%
+    mutate(
+      Percentage = sub("\\%.*", "%", Commodity_Info),
+      Amount = sub(".*\\(([^)]+)\\).*", "\\1", Commodity_Info),
+      Commodity_Code = sub(".*([0-9]{4}) -.*", "\\1", Commodity_Info),
+      Description = sub(".* - (.*)", "\\1", Commodity_Info)
+    ) %>%
+    select(Percentage, Amount, Commodity_Code, Description)
+
+  return(data)
+}
+
+# Function to save combined data for all commodity codes
+save_combined_export_data <- function(commodity_codes, save_directory) {
+  # Create directory if it doesn't exist
+  if (!dir.exists(save_directory)) {
+    dir.create(save_directory, recursive = TRUE)
+    message("📁 Created directory: ", save_directory)
+  }
+
+  combined_data <- data.frame()  # Initialize an empty data frame
+
+  for (commodity_code in commodity_codes) {
+    data <- get_export_data(commodity_code)
+    if (nrow(data) > 0) {
+      combined_data <- bind_rows(combined_data, data)  # Combine the data
+    } else {
+      message("❌ No valid data to add for commodity code: ", commodity_code)
+    }
+  }
+
+  if (nrow(combined_data) > 0) {
+    file_name <- paste0("combined_export_data_", min(commodity_codes), "_", max(commodity_codes), ".csv")
+    file_path <- file.path(save_directory, file_name)
+    write.csv(combined_data, file_path, row.names = FALSE)
+    message("✅ All data saved successfully to: ", file_path)
+  } else {
+    message("❌ No valid data to save.")
+  }
+}
+
+# Example usage for commodity codes
+commodity_codes <- c("01", "02", "03")
+
+# New save location
+save_directory <- "C:/Users/swarn/Downloads/Country Evaluation/Angola HS4 data/"
+
+# Run the save function
+save_combined_export_data(commodity_codes, save_directory)
+
+<ul style="margin-top:0em;"> <li> <b>97%</b> (6.84 million US$): <b>2301</b> - Flours, meals and pellets, of meat or meat offal, of fish or of crustaceans, molluscs or other aquatic invertebrates, unfit for human consumption; greaves.</li> <li> <b>2.96%</b> (208 thousand US$): <b>2309</b> - Preparations of a kind used in animal feeding.</li> <li> <b>0%</b> (5.76 US$): <b>2306</b> - Oil-cake and other solid residues, whether or not ground or in the form of pellets, resulting from the extraction of vegetable fats or oils, other than those of heading 23.04 or 23.05.</li> </ul>
+
+  "Description": desc_match.group(1) if desc_match else text

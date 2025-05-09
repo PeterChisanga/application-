@@ -55,12 +55,16 @@
             float: right;
         }
         /* Column widths for better balance in landscape */
-        th:nth-child(1), td:nth-child(1) { width: 25%; } /* Registration Number */
-        th:nth-child(2), td:nth-child(2) { width: 15%; } /* Equipment Type */
-        th:nth-child(3), td:nth-child(3) { width: 20%; } /* Distance/Hours */
-        th:nth-child(4), td:nth-child(4) { width: 15%; } /* Fuel Used */
-        th:nth-child(5), td:nth-child(5) { width: 15%; } /* Material Delivered */
-        th:nth-child(6), td:nth-child(6) { width: 10%; } /* Fuel Cost */
+        th:nth-child(1), td:nth-child(1) { width: 5%; } /* S No. */
+        th:nth-child(2), td:nth-child(2) { width: 15%; } /* Description */
+        th:nth-child(3), td:nth-child(3) { width: 10%; } /* Type */
+        th:nth-child(4), td:nth-child(4) { width: 20%; } /* Locations */
+        th:nth-child(5), td:nth-child(5) { width: 10%; } /* Hours/Kms */
+        th:nth-child(6), td:nth-child(6) { width: 10%; } /* Material (MT) */
+        th:nth-child(7), td:nth-child(7) { width: 8%; } /* Number of Trips */
+        th:nth-child(8), td:nth-child(8) { width: 10%; } /* Fuel Used */
+        th:nth-child(9), td:nth-child(9) { width: 10%; } /* Average Fuel Consumed */
+        th:nth-child(10), td:nth-child(10) { width: 9%; } /* Fuel Cost */
     </style>
 </head>
 <body>
@@ -73,23 +77,31 @@
         <table>
             <thead>
                 <tr>
-                    <th>Registration Number</th>
-                    <th>Equipment Type</th>
-                    <th>Total Distance Travelled (Km) / Hours Worked</th>
-                    <th>Total Material Delivered (Tonnes)</th>
-                    <th>Total Fuel Used (Litres)</th>
-                    <th>Total Fuel Cost (ZMW)</th>
+                    <th>S No.</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Locations</th>
+                    <th>Number of Trips</th>
+                    <th>Hours/Kms</th>
+                    <th>Material (MT)</th>
+                    <th>Fuel Used (Litres)</th>
+                    <th>Average Fuel Consumed</th>
+                    <th>Fuel Cost (ZMW)</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($reportData as $item)
                     <tr>
-                        <td>{{ $item['registration_number'] }} {{ $item['equipment_name'] }}</td>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $item['equipment_name'] }}</td>
                         <td>{{ $item['equipment_type'] }}</td>
+                        <td>{{ $item['locations'] ?: '-' }}</td>
+                        <td class="right-align">{{ $item['equipment_type'] === 'Machinery' ? '-' : $item['number_of_trips'] }}</td>
                         <td class="right-align">{{ number_format($item['total_distance_or_hours'], 2) }}</td>
-                        <td class="right-align">{{ $item['is_machinery'] ? '-' : number_format($item['total_material_delivered'], 2) }}</td>
+                        <td class="right-align">{{ $item['equipment_type'] === 'HMV' ? number_format($item['total_material_delivered'], 2) : '-' }}</td>
                         <td class="right-align">{{ number_format($item['total_fuel_used'], 2) }}</td>
-                        <td class="right-align">{{ number_format($item['total_fuel_cost'], 2) }}</td>
+                        <td class="right-align">{{ $item['average_fuel_consumed'] === '-' ? '-' : number_format($item['average_fuel_consumed'], 2) }} {{ $item['equipment_type'] === 'Machinery' ? 'ltrs/hr' : 'ltrs/km' }}</td>
+                        <td class="right-align">{{ $item['total_fuel_cost'] === '-' ? '-' : number_format($item['total_fuel_cost'], 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -98,7 +110,7 @@
         <div class="summary">
             <p>Total Material Delivered: <span class="value">{{ number_format($summary['total_material_delivered'], 2) }} Tonnes</span></p>
             <p>Total Fuel Used: <span class="value">{{ number_format($summary['total_fuel_used'], 2) }} Litres</span></p>
-            <p>Total Fuel Cost: <span class="value">{{ number_format($summary['total_fuel_cost'], 2) }} ZMW</span></p>
+            <p>Total Fuel Cost: <span class="value">{{ $summary['total_fuel_cost'] === '-' ? '-' : number_format($summary['total_fuel_cost'], 2) . ' ZMW' }}</span></p>
         </div>
     </div>
 </body>

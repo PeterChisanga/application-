@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('equipments', EquipmentController::class);
         Route::post('/reports/generate', [EquipmentController::class, 'generate'])->name('reports.generate');
         Route::post('/reports/all-equipment', [EquipmentController::class, 'generateAllEquipmentReport'])->name('reports.all_equipment');
+        Route::post('/reports/all-equipment-expired', [EquipmentController::class, 'generateAllEquipmentReportExpired'])->name('reports.all_equipment_expired');
 
         // Trip Routes
         Route::get('/trips', [EquipmentController::class, 'indexTrips'])->name('trips.index');

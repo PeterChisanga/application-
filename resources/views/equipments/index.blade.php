@@ -42,6 +42,12 @@
         <button type="button" class="btn btn-success ml-2" data-bs-toggle="modal" data-bs-target="#reportAllModal">
             <i class="fas fa-file-alt"></i> Generate Report for all Equipment
         </button>
+        <form action="{{ route('reports.all_equipment_expired') }}" method="POST" style="display: inline;">
+            @csrf
+            <button type="submit" class="btn btn-success ml-2">
+                <i class="fas fa-file-alt"></i> Generate Equipment Report For Expired Tax/Insurance
+            </button>
+        </form>
         {{-- <a href="{{ route('equipments.upload') }}" class="btn btn-success"> <i class="fas fa-upload"></i> Add Equipments With An Excel Sheet</a> --}}
         {{-- <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reportModal">
             <i class="fas fa-file-alt"></i> Generate Report For All Vehicles
@@ -668,7 +674,7 @@
                             <select class="form-control @error('format') is-invalid @enderror" id="format" name="format" required>
                                 <option value="">Select Format</option>
                                 <option value="csv" {{ old('format') == 'csv' ? 'selected' : '' }}>Excel (CSV)</option>
-                                <option value="pdf" {{ old('format') == 'pdf' ? 'selected' : '' }}>PDF</option> 
+                                <option value="pdf" {{ old('format') == 'pdf' ? 'selected' : '' }}>PDF</option>
                             </select>
                             @error('format')
                                 <div class="invalid-feedback">{{ $message }}</div>

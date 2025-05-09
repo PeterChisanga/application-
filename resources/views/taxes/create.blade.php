@@ -43,8 +43,12 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="name">Tax Name <span class="text-danger">*</span></label>
-                            <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
-                                   value="{{ old('name') }}" placeholder="e.g., Road Tax" required>
+                            <select id="name" name="name" class="form-control @error('name') is-invalid @enderror" required>
+                                <option value="">-- Select Tax Type --</option>
+                                <option value="ROAD TAX" {{ old('name') == 'ROAD TAX' ? 'selected' : '' }}>ROAD TAX</option>
+                                <option value="FITNESS TAX" {{ old('name') == 'FITNESS TAX' ? 'selected' : '' }}>FITNESS TAX</option>
+                                <option value="IDENTITY TAX" {{ old('name') == 'IDENTITY TAX' ? 'selected' : '' }}>IDENTITY TAX</option>
+                            </select>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
