@@ -59,7 +59,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Expired or Expiring Equipment Report</h1>
+            <h1>Equipment with Expired or Expiring Insurance and Tax</h1>
             <p>As of {{ \Carbon\Carbon::today()->format('Y/m/d') }} (Includes items expiring by {{ \Carbon\Carbon::today()->addMonth()->endOfMonth()->format('Y/m/d') }})</p>
         </div>
 
