@@ -93,7 +93,7 @@
                 @foreach ($reportData as $item)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
-                        <td>{{ $item['equipment_name'] }}</td>
+                        <td>{{ $item['registration_number'] }} {{ $item['equipment_name'] }}</td>
                         <td>{{ $item['equipment_type'] }}</td>
                         <td>{{ $item['locations'] ?: '-' }}</td>
                         <td class="right-align">{{ $item['equipment_type'] === 'Machinery' ? '-' : $item['number_of_trips'] }}</td>

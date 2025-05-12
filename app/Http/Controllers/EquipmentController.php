@@ -1096,7 +1096,7 @@ class EquipmentController extends Controller {
             $row = 4;
             foreach ($reportData as $item) {
                 $sheet->setCellValue('A' . $row, $row - 3)
-                    ->setCellValue('B' . $row, $item['equipment_name'])
+                    ->setCellValue('B' . $row, ($item['registration_number'] ? $item['registration_number'] . ' ' : '') . $item['equipment_name'])
                     ->setCellValue('C' . $row, $item['equipment_type'])
                     ->setCellValue('D' . $row, $item['locations'] ?: '-')
                     ->setCellValue('E' . $row, number_format($item['total_distance_or_hours'], 2))
@@ -1150,6 +1150,7 @@ class EquipmentController extends Controller {
         }
     }
 
+
     public function generateAllEquipmentReportExpired(Request $request) {
         try {
             $today = Carbon::today();
@@ -1157,17 +1158,19 @@ class EquipmentController extends Controller {
 
             // Fetch equipment with insurance and tax records
             $equipments = Equipment::with([
-                'latestInsurance:id,equipment_id,expiry_date',
+                'equipmentInsurances:id,equipment_id,expiry_date',
                 'equipmentTaxes' => fn($query) => $query->select('equipment_id', 'name', 'expiry_date')
                     ->whereIn('name', ['ROAD TAX', 'FITNESS TAX', 'IDENTITY TAX'])
-            ])->whereHas('equipmentTaxes', fn($query) => $query
-                ->whereIn('name', ['ROAD TAX', 'FITNESS TAX', 'IDENTITY TAX'])
-                ->whereNotNull('expiry_date')
-                ->where('expiry_date', '<=', $endOfNextMonth)
-            )->orWhereHas('equipmentInsurances', fn($query) => $query
-                ->whereNotNull('expiry_date')
-                ->where('expiry_date', '<=', $endOfNextMonth)
-            )->get();
+            ])->where(function ($query) use ($endOfNextMonth) {
+                $query->whereHas('equipmentTaxes', fn($q) => $q
+                    ->whereIn('name', ['ROAD TAX', 'FITNESS TAX', 'IDENTITY TAX'])
+                    ->whereNotNull('expiry_date')
+                    ->where('expiry_date', '<=', $endOfNextMonth)
+                )->orWhereHas('equipmentInsurances', fn($q) => $q
+                    ->whereNotNull('expiry_date')
+                    ->where('expiry_date', '<=', $endOfNextMonth)
+                );
+            })->get();
 
             if ($equipments->isEmpty()) {
                 return back()->with('error', 'No equipment with insurance, road tax, fitness tax, or identity tax expired or expiring within the next month.');
@@ -1176,7 +1179,7 @@ class EquipmentController extends Controller {
             // Aggregate data for each equipment
             $reportData = $equipments->map(function ($equipment) use ($today, $endOfNextMonth) {
                 // Get latest insurance expiry date
-                $insurance = $equipment->equipmentInsurances->first();
+                $insurance = $equipment->equipmentInsurances->sortByDesc('expiry_date')->first();
                 $insuranceExpiry = $insurance && $insurance->expiry_date
                     ? Carbon::parse($insurance->expiry_date)->format('Y/m/d')
                     : '';
@@ -1237,6 +1240,7 @@ class EquipmentController extends Controller {
             return back()->with('error', 'An error occurred while generating the report: ' . $e->getMessage());
         }
     }
+
     // ---------------------------Spares Methods-------------------------
     public function createSpare(Equipment $equipment) {
         return view('spares.create', compact('equipment'));
