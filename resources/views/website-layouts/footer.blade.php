@@ -23,13 +23,13 @@
             </div>
             <div class="col-md-4 col-12 mb-4 mb-md-0">
                 <h5>Contact Details</h5>
-                <p><i class="fas fa-map-marker-alt"></i>Follow our Address, Sabina Mufulira Road</p>
-                <p>Kitwe - 50100, Copperbelt, Zambia</p>
+                <p><i class="fas fa-map-marker-alt"></i>Follow our Address,</p>
+                <p>Farm Sub-A of 4213, Sabina Mufulira Road, Kitwe, Zambia</p>
             </div>
             <div class="col-md-4 col-12">
                 <h5>Address</h5>
                 <p><i class="fas fa-map-marker-alt"></i> Sabina Mufulira Road</p>
-                <p>Kitwe - 50100, Copperbelt, Zambia</p>
+                <p>Farm Sub-A of 4213, Sabina Mufulira Road, Kitwe, Zambia</p>
             </div>
         </div>
         <div class="text-center mt-7">

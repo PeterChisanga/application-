@@ -1150,7 +1150,7 @@ class EquipmentController extends Controller {
         }
     }
 
-
+    //Generate Report that show vehicles with expiry insurance & taxes
     public function generateAllEquipmentReportExpired(Request $request) {
         try {
             $today = Carbon::today();
@@ -1161,23 +1161,30 @@ class EquipmentController extends Controller {
                 'equipmentInsurances:id,equipment_id,expiry_date',
                 'equipmentTaxes' => fn($query) => $query->select('equipment_id', 'name', 'expiry_date')
                     ->whereIn('name', ['ROAD TAX', 'FITNESS TAX', 'IDENTITY TAX'])
-            ])->where(function ($query) use ($endOfNextMonth) {
-                $query->whereHas('equipmentTaxes', fn($q) => $q
-                    ->whereIn('name', ['ROAD TAX', 'FITNESS TAX', 'IDENTITY TAX'])
-                    ->whereNotNull('expiry_date')
-                    ->where('expiry_date', '<=', $endOfNextMonth)
-                )->orWhereHas('equipmentInsurances', fn($q) => $q
-                    ->whereNotNull('expiry_date')
-                    ->where('expiry_date', '<=', $endOfNextMonth)
-                );
-            })->get();
+            ])->get();
 
-            if ($equipments->isEmpty()) {
+            // filter manually
+            $filteredEquipments = $equipments->filter(function ($equipment) use ($endOfNextMonth) {
+                $latestInsurance = $equipment->equipmentInsurances->sortByDesc('expiry_date')->first();
+                $latestInsuranceExpired = $latestInsurance && Carbon::parse($latestInsurance->expiry_date)->lte($endOfNextMonth);
+
+                // Get latest taxes by type
+                $taxes = $equipment->equipmentTaxes->groupBy('name')->map(fn($group) => $group->sortByDesc('expiry_date')->first());
+
+                $roadTaxExpired = $taxes->has('ROAD TAX') && Carbon::parse($taxes['ROAD TAX']->expiry_date)->lte($endOfNextMonth);
+                $fitnessTaxExpired = $taxes->has('FITNESS TAX') && Carbon::parse($taxes['FITNESS TAX']->expiry_date)->lte($endOfNextMonth);
+                $identityTaxExpired = $taxes->has('IDENTITY TAX') && Carbon::parse($taxes['IDENTITY TAX']->expiry_date)->lte($endOfNextMonth);
+
+                // Include only if any of the latest taxes or insurance is expiring
+                return $latestInsuranceExpired || $roadTaxExpired || $fitnessTaxExpired || $identityTaxExpired;
+            })->values();
+
+            if ($filteredEquipments->isEmpty()) {
                 return back()->with('error', 'No equipment with insurance, road tax, fitness tax, or identity tax expired or expiring within the next month.');
             }
 
             // Aggregate data for each equipment
-            $reportData = $equipments->map(function ($equipment) use ($today, $endOfNextMonth) {
+            $reportData = $filteredEquipments->map(function ($equipment) use ($today, $endOfNextMonth) {
                 // Get latest insurance expiry date
                 $insurance = $equipment->equipmentInsurances->sortByDesc('expiry_date')->first();
                 $insuranceExpiry = $insurance && $insurance->expiry_date
