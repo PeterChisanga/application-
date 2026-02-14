@@ -225,5 +225,3 @@
 </section>
 @endsection
 
-
-//git remote set-url origin https://github.com/swarnametals/application-tracking-system.git
