@@ -150,8 +150,9 @@
                 <h1 class="fw-bold">Welcome to Swarna Metals</h1>
                 <p>
                     Swarna Metals Zambia Limited (SMZL) is a state-of-the-art
-                    <span class="fw-bold">greenfield hydrometallurgical copper extraction plant</span>,
-                    strategically located 25 kilometers from Kitwe, in Zambia's Copperbelt Province.
+                    <span class="fw-bold">hydrometallurgical copper processing plant</span>
+                    producing approximately 200 MT of copper cathodes and 1,000 MT of copper concentrates per month.
+                    The facility is strategically located 25 kilometers from Kitwe in Zambia’s Copperbelt Province.
                 </p>
                 <a href="/about" class="btn mb-2 text-white" style="background-color: #510404;">Learn More</a>
             </div>
@@ -223,3 +224,6 @@
     </div>
 </section>
 @endsection
+
+
+//git remote set-url origin https://github.com/swarnametals/application-tracking-system.git
