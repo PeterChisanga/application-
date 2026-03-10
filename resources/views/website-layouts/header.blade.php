@@ -16,7 +16,7 @@
         <label for="check" class="checkbtn">
             <i class="fas fa-bars"></i>
         </label>
-        <img src="{{ asset('images/logo_circle.jpg') }}" alt="Swarna Metals" class="logo" style="width: 80px; height: auto; margin-right: 10px;">
+        <img src="{{ asset('images/logo_circle.jpg') }}" alt="Swarna Metals" class="logo">
         <ul>
             <li><a class="active" href="/">Home</a></li>
             <li><a href="/about">About Us</a></li>
@@ -26,4 +26,5 @@
         </ul>
     </nav>
 </header>
+
 

@@ -28,6 +28,12 @@
         z-index: 1000;
     }
 
+    .logo {
+        width: 80px;
+        height: auto;
+        margin-right: 10px;
+    }
+
     /* Top contact bar above main nav */
     .top-contact-bar {
         background: #510404;
@@ -61,13 +67,18 @@
             justify-content: center;
             margin: 2px 0;
         }
+        .logo {
+            width: 40px;
+            height: auto;
+            margin-right: 4px;
+        }
         /* ensure main content clears the fixed header on small screens */
-        body, html { padding-top: 80px; }
+        body, html { padding-top: 50px; }
     }
 
     @media (max-width: 576px) {
         /* slightly larger padding for very small screens where header stacks taller */
-        body, html { padding-top: 80px; }
+        body, html { padding-top: 50px; }
     }
 
     .main-header nav {
@@ -119,6 +130,10 @@
     }
 
     @media (max-width: 768px) {
+        .top-contact-bar {
+            font-size: 12px;
+        }
+
         .main-header .nav {
             padding: 10px 0px;
         }

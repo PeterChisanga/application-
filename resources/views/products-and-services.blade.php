@@ -92,6 +92,10 @@
             font-size: 1.5rem;
         }
 
+        .products-services h4 {
+            font-size: 18px;
+        }
+
         .products-services  ul li {
             font-size: 1rem;
         }
@@ -108,6 +112,10 @@
 
         .products-services h2 {
             font-size: 1.3rem;
+        }
+
+        .products-services h4 {
+            font-size: 18px;
         }
 
         .products-services ul li {

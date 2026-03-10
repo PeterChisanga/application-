@@ -9,29 +9,7 @@
 		100% { opacity: 1; transform: translateY(0); }
 	}
 	.animate-float-in { animation: floatIn 1s ease-out forwards; opacity: 0; }
-    /* Responsive: tablets and below */
-    @media (max-width: 991.98px) {
-        .csr-hero, .csr-slide { min-height:50vh; height:50vh; }
-        .csr-content h1{ font-size:36px; }
-        .csr-section h3{ font-size:22px; }
-        .csr-section p{ font-size:18px; }
-        .csr-content p{ font-size:18px; font-weight:600; max-width:700px }
-        .image-slot{min-height:220px}
-        .image-slot img{max-height:360px}
-    }
 
-    /* Responsive: mobile phones */
-    @media (max-width: 575.98px) {
-        .csr-hero, .csr-slide { min-height:40vh; height:40vh; }
-        .csr-content h1{ font-size:26px; }
-        .csr-section h3{ font-size:18px; }
-        .csr-section p{ font-size:15px; }
-        .csr-content p{ font-size:15px; font-weight:600; max-width:95% }
-        .csr-slide::after{ background:rgba(0,0,0,0.45) }
-        .carousel-control-prev, .carousel-control-next{ display:none }
-        .image-slot{min-height:160px}
-        .image-slot img{max-height:220px}
-    }
 
     .csr-hero{
         position:relative;
@@ -113,6 +91,30 @@
 	.slide-left{transform:translateX(-30px)}
 	.slide-right{transform:translateX(30px)}
 	.slide-left.in-view,.slide-right.in-view{transform:translateX(0)}
+
+    /* Responsive: tablets and below */
+    @media (max-width: 991.98px) {
+        .csr-hero, .csr-slide { min-height:50vh; height:50vh; }
+        .csr-content h1{ font-size:36px; }
+        .csr-section h3{ font-size:22px; }
+        .csr-section p{ font-size:18px; }
+        .csr-content p{ font-size:18px; max-width:700px }
+        .image-slot{min-height:220px}
+        .image-slot img{max-height:360px}
+    }
+
+    /* Responsive: mobile phones */
+    @media (max-width: 575.98px) {
+        .csr-hero, .csr-slide { min-height:40vh; height:40vh; }
+        .csr-content h1{ font-size:26px; }
+        .csr-section h3{ font-size:18px; }
+        .csr-section p{ font-size:15px; }
+        .csr-content p{ font-size:15px; font-weight:600; max-width:95% }
+        .csr-slide::after{ background:rgba(0,0,0,0.45) }
+        .carousel-control-prev, .carousel-control-next{ display:none }
+        .image-slot{min-height:160px}
+        .image-slot img{max-height:220px}
+    }
 
 </style>
     <div id="csrCarousel" class="carousel slide csr-hero" data-bs-ride="carousel">
