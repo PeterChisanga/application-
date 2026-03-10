@@ -5381,3 +5381,52 @@ save_combined_export_data(commodity_codes, save_directory)
 <ul style="margin-top:0em;"> <li> <b>97%</b> (6.84 million US$): <b>2301</b> - Flours, meals and pellets, of meat or meat offal, of fish or of crustaceans, molluscs or other aquatic invertebrates, unfit for human consumption; greaves.</li> <li> <b>2.96%</b> (208 thousand US$): <b>2309</b> - Preparations of a kind used in animal feeding.</li> <li> <b>0%</b> (5.76 US$): <b>2306</b> - Oil-cake and other solid residues, whether or not ground or in the form of pellets, resulting from the extraction of vegetable fats or oils, other than those of heading 23.04 or 23.05.</li> </ul>
 
   "Description": desc_match.group(1) if desc_match else text
+
+
+<!-- products section home page  -->
+
+<section style="background-color: #510404;">
+    <div class="images-section py-5">
+    <div class="images-section py-5">
+        <h1 class="text-center mb-5 text-white">Our Products and Services</h1>
+        <div class="container">
+            <div class="row text-center g-4">
+                <div class="col-md-4">
+                    <img src="{{ asset('images/cathode.jpeg') }}" alt="Copper Cathodes" class="img-fluid gallery-img">
+                    <div class="product-info">
+                        <h5 class="text-white">Copper Cathodes</h5>
+                        <p class="text-white"><strong>Description:</strong> High-purity cathodes with 99.99% Cu content, suitable for industrial applications.</p>
+                        <p class="text-white"><strong>Applications:</strong> Electrical manufacturing, construction, and industrial machinery.</p>
+                        <p class="text-white"><strong>Key Features:</strong> Precision-crafted using advanced hydrometallurgical techniques.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <img src="{{ asset('images/1733738279178.png') }}" alt="Copper Concentrates" class="img-fluid gallery-img">
+                    <div class="product-info">
+                        <h5 class="text-white">Copper Concentrates</h5>
+                        <p class="text-white"><strong>Description:</strong> Premium-grade concentrates with 25% copper content, ideal for smelting and refining processes.</p>
+                        <p class="text-white"><strong>Applications:</strong> Base material for high-value copper products.</p>
+                        <p class="text-white"><strong>Key Features:</strong> Sustainably sourced from sulphide ores.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <img src="{{ asset('images/IMG-20241209-WA0101.jpg') }}" alt="Future Goals" class="img-fluid gallery-img">
+                    <div class="product-info">
+                        <h5 class="text-white">Future Goals</h5>
+                        <p class="text-white"><strong>Expansion:</strong> Expand milling capacity to 2,400 TPD by 2026.</p>
+                        <p class="text-white"><strong>Partnerships:</strong> Establish global partnerships for copper exports.</p>
+                        <p class="text-white"><strong>Contributions:</strong> Contribute significantly to Zambia’s industrial growth through innovation and sustainability.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+My Website Suggestion updates
+- Include page/section that talk about our CSR, Our Employement opportunities and sustainability.
+-Create page that talk about our operations: Our Concentrator , Leach-SX-EW plant and exploration/mining operations.
+-On the careers page we should talk about our work force/employee welfare ...remove job posts
+-About PLR Zambia page should be removed and only talked about briefly on the About page like in our brochure
+-The design will be improved overall with HD plant photos

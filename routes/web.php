@@ -31,12 +31,15 @@ Route::get('/products-and-services', function () {
     return view('products-and-services');
 });
 
-Route::get('/careers', function () {
-    return view('careers');
+// Route::get('/careers', function () {
+//     return view('careers');
+// });
+Route::get('/csr', function () {
+    return view('csr');
 });
 
-Route::get('/about-plr-zambia', function () {
-    return view('about-plr-zambia');
+Route::get('/operations', function () {
+    return view('operations');
 });
 
 

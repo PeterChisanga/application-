@@ -1,6 +1,6 @@
 @extends('website-layouts.app')
 
-@section('title', 'Products and Services')
+@section('title', 'Products')
 
 @section('content')
 <style>
@@ -15,14 +15,15 @@
     }
 
     .products-services h1 {
-        font-size: 2.5rem;
-        color: #333;
+        font-size: 45px;
+        color: #ff5733;
+        font-weight: 800;
     }
 
     .products-services h2 {
         font-size: 1.8rem;
-        color: #444;
-        border-bottom: 3px solid #ff5733;
+        color:  #ff5733;
+        border-bottom: 3px solid #444 ;
         display: inline-block;
         padding-bottom: 5px;
     }
@@ -60,12 +61,6 @@
     .product-row img:hover {
         transform: scale(1.05);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .future-goals ul li {
-        font-size: 25px;
-        margin-bottom: 10px;
-        color: #555;
     }
 
     .product-row  ul li {
@@ -120,10 +115,10 @@
         }
     }
 </style>
-
+<br>
 <section class="products-services ">
     <div class="container">
-        <h1 class="text-center">Our Products and Services</h1>
+        <h1 class="text-center">Our Products</h1>
 
         <div class="content mt-4">
             <!-- Copper Cathodes Section -->
@@ -141,26 +136,18 @@
 
             <!-- Copper Concentrates Section -->
             <div class="product-row">
-                <img src="{{ asset('images/1733738279178.png') }}" alt="Copper Concentrates" class="img-fluid">
+                <img src="{{ asset('images/concetrate-plant.jpg') }}" alt="Copper Concentrates" class="img-fluid">
                 <div>
                     <h2>Copper Concentrates</h2>
                     <ul>
-                        <li><strong>Description:</strong> Premium-grade concentrates with 25% copper content, ideal for smelting and refining processes.</li>
+                        <li><strong>Description:</strong> Premium-grade concentrates between 20% and 35% copper content, ideal for smelting and refining processes.</li>
                         <li><strong>Applications:</strong> Base material for high-value copper products.</li>
                         <li><strong>Key Features:</strong> Sustainably sourced from sulphide ores.</li>
                     </ul>
                 </div>
             </div>
+            <h4>For queries on our products please send an email to sales@swarnametals.com</h4>
         </div>
-
-        <section class="future-goals mt-5">
-            <h2>Future Goals</h2>
-            <ul>
-                <li>Expand milling capacity to <strong>2,400 TPD</strong> by 2026.</li>
-                <li>Establish global partnerships for copper exports.</li>
-                <li>Contribute significantly to Zambia’s industrial growth through innovation and sustainability.</li>
-            </ul>
-        </section>
     </div>
 </section>
 @endsection

@@ -21,13 +21,13 @@
     }
 
     .hero-section {
-        background-image: url('{{ asset('images/home-background-image.jpg') }}');
+        background-image: url('{{ asset('images/Ball Mill.jpg') }}');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         width: 100%;
         min-height: 75vh;
-        color: #fff;
+        color: #ff5733;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -42,7 +42,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.75);
         z-index: 1;
     }
 
@@ -59,34 +59,14 @@
         object-fit: cover;
     }
 
-    .product-info {
-        padding-top: 10px;
-        text-align: left;
-        font-size: 1rem;
-        color: #000000;
-    }
-
-    .product-info h5 {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-
-    .product-info p {
-        margin: 5px 0;
-        font-size: 1rem;
-    }
-
-    .product-info p strong {
-        font-weight: bold;
-    }
-
     .our-gallery {
         padding: 40px 0;
     }
 
     .welcome-section h1 {
-        font-size: 2.5rem;
+        font-size: 45px;
+        color: #ff5733;
+        font-weight: 800;
     }
 
     .welcome-section p {
@@ -134,7 +114,6 @@
 <section class="hero-section">
     <div class="container animate-float-in">
         <h1 class="display-3 fw-bold">Swarna Metals</h1>
-        <p class="lead">Discover our products and services today.</p>
         <a href="/about" class="btn mb-2 text-white" style="background-color: #510404;">Explore</a>
         <div class="mt-3">
             <p>★★★★★</p>
@@ -157,54 +136,14 @@
                 <a href="/about" class="btn mb-2 text-white" style="background-color: #510404;">Learn More</a>
             </div>
             <div class="col-md-6">
-                <img src="{{ asset('images/side-image.jpg') }}" alt="Swarna Plant" class="img-fluid rounded">
+                <img src="{{ asset('images/crusher-2.jpg') }}" alt="Swarna Plant" class="img-fluid rounded">
             </div>
         </div>
     </div>
 </section>
 
-<section style="background-color: #510404;">
-    <div class="images-section py-5">
-    <div class="images-section py-5">
-        <h1 class="text-center mb-5 text-white">Our Products and Services</h1>
-        <div class="container">
-            <div class="row text-center g-4">
-                <div class="col-md-4">
-                    <img src="{{ asset('images/cathode.jpeg') }}" alt="Copper Cathodes" class="img-fluid gallery-img">
-                    <div class="product-info">
-                        <h5 class="text-white">Copper Cathodes</h5>
-                        <p class="text-white"><strong>Description:</strong> High-purity cathodes with 99.99% Cu content, suitable for industrial applications.</p>
-                        <p class="text-white"><strong>Applications:</strong> Electrical manufacturing, construction, and industrial machinery.</p>
-                        <p class="text-white"><strong>Key Features:</strong> Precision-crafted using advanced hydrometallurgical techniques.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <img src="{{ asset('images/1733738279178.png') }}" alt="Copper Concentrates" class="img-fluid gallery-img">
-                    <div class="product-info">
-                        <h5 class="text-white">Copper Concentrates</h5>
-                        <p class="text-white"><strong>Description:</strong> Premium-grade concentrates with 25% copper content, ideal for smelting and refining processes.</p>
-                        <p class="text-white"><strong>Applications:</strong> Base material for high-value copper products.</p>
-                        <p class="text-white"><strong>Key Features:</strong> Sustainably sourced from sulphide ores.</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <img src="{{ asset('images/IMG-20241209-WA0101.jpg') }}" alt="Future Goals" class="img-fluid gallery-img">
-                    <div class="product-info">
-                        <h5 class="text-white">Future Goals</h5>
-                        <p class="text-white"><strong>Expansion:</strong> Expand milling capacity to 2,400 TPD by 2026.</p>
-                        <p class="text-white"><strong>Partnerships:</strong> Establish global partnerships for copper exports.</p>
-                        <p class="text-white"><strong>Contributions:</strong> Contribute significantly to Zambia’s industrial growth through innovation and sustainability.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="our-gallery py-5">
+{{-- <section class="our-gallery py-5">
     <div class="container">
-        <h1 class="text-center mb-3">Our Gallery</h1>
-        {{-- <h2 class="text-center mb-4">Our Gallery</h2> --}}
         <div class="row g-4">
             <div class="col-md-8">
                 <img src="{{ asset('images/swarna-truck.jpeg') }}" alt="Image 1" class="img-fluid gallery-img">
@@ -222,6 +161,5 @@
             </div>
         </div>
     </div>
-</section>
+</section> --}}
 @endsection
-
