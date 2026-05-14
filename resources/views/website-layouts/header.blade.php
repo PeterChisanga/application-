@@ -22,6 +22,7 @@
             <li><a href="/about">About Us</a></li>
             <li><a href="/products-and-services">Products</a></li>
             <li><a href="/operations">Operations</a></li>
+            <li><a href="/tender">Tenders</a></li>
             <li><a href="/csr">CSR</a></li>
         </ul>
     </nav>

@@ -7,6 +7,7 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,8 +35,14 @@ Route::get('/products-and-services', function () {
 // Route::get('/careers', function () {
 //     return view('careers');
 // });
+
 Route::get('/csr', function () {
     return view('csr');
+});
+
+
+Route::get('/tender', function () {
+    return view('tender');
 });
 
 Route::get('/operations', function () {
